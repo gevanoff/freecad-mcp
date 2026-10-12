@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "freecad-mcp"
+version = "0.1.0"
+description = "Secure local MCP bridge for FreeCAD"
+requires-python = ">=3.10"
+license = "LGPL-2.1-or-later"
+dependencies = ["mcp[cli]>=1.2.0"]
+
+[project.scripts]
+freecad-mcp = "freecad_mcp.server:main"
+freecad-mcp-init = "freecad_mcp.config:initialize_token_file"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/freecad_mcp"]
+
