@@ -12,7 +12,8 @@ from freecad_mcp.config import read_token
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 9876
-MAX_FRAME_BYTES = 1024 * 1024
+MAX_FRAME_BYTES = 1024 * 1024  # Maximum request frame, including newline
+MAX_RESPONSE_BYTES = 4 * 1024 * 1024  # Maximum response frame, including newline
 CONNECT_TIMEOUT = 3.0
 CALL_TIMEOUT = 35.0
 
@@ -68,8 +69,11 @@ class FreeCADBridge:
     @staticmethod
     def _read_frame(sock: socket.socket) -> dict[str, Any]:
         chunks = bytearray()
-        while len(chunks) <= MAX_FRAME_BYTES:
-            part = sock.recv(min(65536, MAX_FRAME_BYTES + 1 - len(chunks)))
+        while True:
+            remaining = MAX_RESPONSE_BYTES - len(chunks)
+            if remaining <= 0:
+                raise BridgeError("FreeCAD RPC response exceeds the 4 MiB frame limit")
+            part = sock.recv(min(65536, remaining))
             if not part:
                 raise BridgeError("FreeCAD closed the RPC connection before replying")
             delimiter = part.find(b"\n")
@@ -83,5 +87,4 @@ class FreeCADBridge:
                     raise BridgeError("Invalid JSON-RPC response object")
                 return result
             chunks.extend(part)
-        raise BridgeError("FreeCAD RPC response exceeds the 1 MiB frame limit")
 
