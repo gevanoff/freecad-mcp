@@ -117,6 +117,15 @@ def create_primitive(
     # feature behind. FreeCAD transactions also preserve undo history on success.
     # FreeCAD transaction ownership is application-wide. Opening a transaction
     # on B can commit an existing GUI transaction on A, so inspect every document.
+    # Document.HasPendingTransaction is false for a GUI transaction booked
+    # before its first edit. The application-level transaction must be checked
+    # first or doc.openTransaction() can replace the GUI's undo/Cancel scope.
+    try:
+        booked_transaction = FreeCAD.getActiveTransaction()
+    except (AttributeError, TypeError) as exc:
+        raise RuntimeError("Cannot verify FreeCAD application transaction ownership") from exc
+    if booked_transaction is not None:
+        raise RuntimeError("A FreeCAD GUI transaction is already booked; finish or cancel it first")
     if any(bool(open_doc.HasPendingTransaction)
            for open_doc in FreeCAD.listDocuments().values()):
         raise RuntimeError("A FreeCAD document has a pending GUI transaction; finish or cancel it first")
