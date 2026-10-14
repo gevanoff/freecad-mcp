@@ -35,6 +35,8 @@ class FakeShape:
 class FakeDocument:
     Name = "Test"
 
+    HasPendingTransaction = False
+
     def __init__(self, shape=None, recompute_error=None):
         self.shape = shape if shape is not None else FakeShape()
         self.recompute_error = recompute_error
@@ -46,12 +48,15 @@ class FakeDocument:
 
     def addObject(self, type_id, name):
         self.events.append("add")
-        obj = types.SimpleNamespace(Name=name, Label=name, TypeId=type_id, Shape=self.shape)
+        obj = types.SimpleNamespace(Name=name, Label=name, TypeId=type_id, Shape=self.shape,
+                                    State=getattr(self, "object_state", []),
+                                    isValid=lambda: not getattr(self, "object_invalid", False))
         self.objects.append(obj)
         return obj
 
-    def recompute(self):
+    def recompute(self, objects=None):
         self.events.append("recompute")
+        assert objects == self.objects, "Recompute must be scoped to new primitive"
         if self.recompute_error:
             raise self.recompute_error
 
@@ -105,6 +110,28 @@ class PrimitiveTransactionTests(unittest.TestCase):
             load_handler(doc).create_primitive("box")
         self.assertEqual(doc.objects, [])
         self.assertEqual(doc.events[-2:], ["commit", "abort"])
+
+    def test_pending_gui_transaction_is_not_touched(self):
+        doc = FakeDocument()
+        doc.HasPendingTransaction = True
+        with self.assertRaisesRegex(RuntimeError, "pending GUI transaction"):
+            load_handler(doc).create_primitive("box")
+        self.assertEqual(doc.events, [])
+
+    def test_nonthrowing_recompute_error_rolls_back(self):
+        doc = FakeDocument()
+        doc.object_state = ["Error"]
+        with self.assertRaisesRegex(ValueError, "failed recomputation"):
+            load_handler(doc).create_primitive("box")
+        self.assertEqual(doc.objects, [])
+        self.assertEqual(doc.events[-1], "abort")
+
+    def test_invalid_object_with_valid_brep_rolls_back(self):
+        doc = FakeDocument()
+        doc.object_invalid = True
+        with self.assertRaisesRegex(ValueError, "failed recomputation"):
+            load_handler(doc).create_primitive("box")
+        self.assertEqual(doc.objects, [])
 
     def test_input_validation_never_opens_transaction(self):
         doc = FakeDocument()
