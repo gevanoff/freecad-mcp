@@ -115,8 +115,11 @@ def create_primitive(
     type_id = {"box": "Part::Box", "cylinder": "Part::Cylinder", "sphere": "Part::Sphere"}[kind]
     # A failed recompute or invalid shape must not leave a partially constructed
     # feature behind. FreeCAD transactions also preserve undo history on success.
-    if bool(doc.HasPendingTransaction):
-        raise RuntimeError("Document has a pending GUI transaction; finish or cancel it first")
+    # FreeCAD transaction ownership is application-wide. Opening a transaction
+    # on B can commit an existing GUI transaction on A, so inspect every document.
+    if any(bool(open_doc.HasPendingTransaction)
+           for open_doc in FreeCAD.listDocuments().values()):
+        raise RuntimeError("A FreeCAD document has a pending GUI transaction; finish or cancel it first")
     doc.openTransaction("MCP: create primitive")
     try:
         obj = doc.addObject(type_id, "MCPPrimitive")
