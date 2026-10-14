@@ -45,9 +45,11 @@ class FakeDocument:
         self.HasPendingTransaction = False
         self.UndoMode = 1
         self.UndoNames = []
+        self.booking = None
 
     def openTransaction(self, label):
         self.events.append("open")
+        self.booking = ("MCP", 42)
 
     def addObject(self, type_id, name):
         self.events.append("add")
@@ -73,11 +75,13 @@ class FakeDocument:
             raise self.commit_error
         self.HasPendingTransaction = False
         self.UndoNames.insert(0, "MCP: create primitive")
+        self.booking = None
         if getattr(self, "post_commit_error", None):
             raise self.post_commit_error
 
     def abortTransaction(self):
         self.events.append("abort")
+        self.booking = None
         if self.HasPendingTransaction:
             self.objects.clear()
             self.HasPendingTransaction = False
@@ -87,7 +91,7 @@ def load_handler(document, active_transaction=None, transaction_api_available=Tr
     fake_freecad = types.SimpleNamespace(ActiveDocument=document, getDocument=lambda name: document,
                                          listDocuments=lambda: {"Test": document, **getattr(document, "other_documents", {})})
     if transaction_api_available:
-        fake_freecad.getActiveTransaction = lambda: active_transaction
+        fake_freecad.getActiveTransaction = lambda: active_transaction if active_transaction is not None else document.booking
     with patch.dict(sys.modules, {"FreeCAD": fake_freecad}):
         spec = importlib.util.spec_from_file_location("freecad_document_under_test", HANDLER_PATH)
         module = importlib.util.module_from_spec(spec)
@@ -109,6 +113,18 @@ class PrimitiveTransactionTests(unittest.TestCase):
             load_handler(doc).create_primitive("cylinder")
         self.assertEqual(doc.objects, [])
         self.assertEqual(doc.events, ["open", "add", "recompute", "abort"])
+
+    def test_add_object_failure_clears_booked_transaction(self):
+        doc = FakeDocument()
+        def fail_before_first_edit(type_id, name):
+            doc.events.append("add")
+            raise RuntimeError("construction failed")
+        doc.addObject = fail_before_first_edit
+        with self.assertRaisesRegex(RuntimeError, "construction failed"):
+            load_handler(doc).create_primitive("box")
+        self.assertEqual(doc.events, ["open", "add", "abort"])
+        self.assertIsNone(doc.booking)
+        self.assertEqual(doc.objects, [])
 
     def test_disabled_undo_refuses_mutation(self):
         doc = FakeDocument()
