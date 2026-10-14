@@ -135,6 +135,7 @@ def create_primitive(
         raise RuntimeError("FreeCAD document undo transactions are disabled")
     undo_before = tuple(doc.UndoNames)
     doc.openTransaction("MCP: create primitive")
+    owned_transaction = FreeCAD.getActiveTransaction()
     try:
         obj = doc.addObject(type_id, "MCPPrimitive")
         if kind == "box":
@@ -178,7 +179,10 @@ def create_primitive(
         # A booked application transaction may have no document undo record
         # yet (e.g. addObject failed before its first edit). Still abort our
         # booking, but never interfere with a different transaction owner.
-        if bool(doc.HasPendingTransaction) or FreeCAD.getActiveTransaction() is not None:
+        active_transaction = FreeCAD.getActiveTransaction()
+        if bool(doc.HasPendingTransaction) or (
+            owned_transaction is not None and active_transaction == owned_transaction
+        ):
             doc.abortTransaction()
         raise
     return result
