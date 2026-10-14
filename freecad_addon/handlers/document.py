@@ -113,18 +113,31 @@ def create_primitive(
 
     doc = _resolve_doc(doc_name)
     type_id = {"box": "Part::Box", "cylinder": "Part::Cylinder", "sphere": "Part::Sphere"}[kind]
-    obj = doc.addObject(type_id, "MCPPrimitive")
-    if kind == "box":
-        obj.Length, obj.Width, obj.Height = float(length), float(width), float(height)
-    elif kind == "cylinder":
-        obj.Radius, obj.Height = float(radius), float(height)
+    # A failed recompute or invalid shape must not leave a partially constructed
+    # feature behind. FreeCAD transactions also preserve undo history on success.
+    doc.openTransaction("MCP: create primitive")
+    try:
+        obj = doc.addObject(type_id, "MCPPrimitive")
+        if kind == "box":
+            obj.Length, obj.Width, obj.Height = float(length), float(width), float(height)
+        elif kind == "cylinder":
+            obj.Radius, obj.Height = float(radius), float(height)
+        else:
+            obj.Radius = float(radius)
+        if label:
+            obj.Label = label
+        doc.recompute()
+        summary = _shape_summary(obj.Shape)
+        if summary["is_null"] or not summary["is_valid"]:
+            raise ValueError("Created primitive has an invalid or null shape")
+        result = {"document": doc.Name, "name": obj.Name, "label": obj.Label,
+                  "type_id": obj.TypeId, "shape": summary}
+    except BaseException:
+        doc.abortTransaction()
+        raise
     else:
-        obj.Radius = float(radius)
-    if label:
-        obj.Label = label
-    doc.recompute()
-    return {"document": doc.Name, "name": obj.Name, "label": obj.Label, "type_id": obj.TypeId,
-            "shape": _shape_summary(obj.Shape)}
+        doc.commitTransaction()
+        return result
 
 
 def _safe_valid(obj) -> bool | None:
