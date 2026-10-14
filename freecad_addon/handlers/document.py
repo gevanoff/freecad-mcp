@@ -115,6 +115,8 @@ def create_primitive(
     type_id = {"box": "Part::Box", "cylinder": "Part::Cylinder", "sphere": "Part::Sphere"}[kind]
     # A failed recompute or invalid shape must not leave a partially constructed
     # feature behind. FreeCAD transactions also preserve undo history on success.
+    if bool(doc.HasPendingTransaction):
+        raise RuntimeError("Document has a pending GUI transaction; finish or cancel it first")
     doc.openTransaction("MCP: create primitive")
     try:
         obj = doc.addObject(type_id, "MCPPrimitive")
@@ -126,7 +128,11 @@ def create_primitive(
             obj.Radius = float(radius)
         if label:
             obj.Label = label
-        doc.recompute()
+        doc.recompute([obj])
+        # FreeCAD often records execution failures in State instead of raising.
+        state = [str(item) for item in getattr(obj, "State", [])]
+        if "Invalid" in state or "Error" in state or not _safe_valid(obj):
+            raise ValueError("Created primitive failed recomputation: " + ", ".join(state))
         summary = _shape_summary(obj.Shape)
         if summary["is_null"] or not summary["is_valid"]:
             raise ValueError("Created primitive has an invalid or null shape")
