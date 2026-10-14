@@ -70,9 +70,11 @@ class FakeDocument:
         self.objects.clear()
 
 
-def load_handler(document):
+def load_handler(document, active_transaction=None, transaction_api_available=True):
     fake_freecad = types.SimpleNamespace(ActiveDocument=document, getDocument=lambda name: document,
                                          listDocuments=lambda: {"Test": document, **getattr(document, "other_documents", {})})
+    if transaction_api_available:
+        fake_freecad.getActiveTransaction = lambda: active_transaction
     with patch.dict(sys.modules, {"FreeCAD": fake_freecad}):
         spec = importlib.util.spec_from_file_location("freecad_document_under_test", HANDLER_PATH)
         module = importlib.util.module_from_spec(spec)
@@ -128,6 +130,26 @@ class PrimitiveTransactionTests(unittest.TestCase):
             load_handler(doc).create_primitive("box")
         self.assertEqual(doc.events, [])
         self.assertEqual(other.events, [])
+
+    def test_booked_gui_transaction_before_first_edit_is_preserved(self):
+        doc = FakeDocument()
+        other = FakeDocument()
+        doc.other_documents = {"Other": other}
+        # No document has pending edits yet, but FreeCAD has booked a GUI command.
+        self.assertFalse(doc.HasPendingTransaction)
+        self.assertFalse(other.HasPendingTransaction)
+        booked = ("GUI: edit sketch", 128)
+        with self.assertRaisesRegex(RuntimeError, "already booked"):
+            load_handler(doc, active_transaction=booked).create_primitive("box")
+        self.assertEqual(doc.events, [])
+        self.assertEqual(other.events, [])
+        self.assertEqual(doc.objects, [])
+
+    def test_unavailable_transaction_api_fails_closed(self):
+        doc = FakeDocument()
+        with self.assertRaisesRegex(RuntimeError, "Cannot verify"):
+            load_handler(doc, transaction_api_available=False).create_primitive("box")
+        self.assertEqual(doc.events, [])
 
     def test_nonthrowing_recompute_error_rolls_back(self):
         doc = FakeDocument()
