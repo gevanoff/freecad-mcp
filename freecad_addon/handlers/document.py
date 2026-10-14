@@ -132,12 +132,11 @@ def create_primitive(
             raise ValueError("Created primitive has an invalid or null shape")
         result = {"document": doc.Name, "name": obj.Name, "label": obj.Label,
                   "type_id": obj.TypeId, "shape": summary}
+        doc.commitTransaction()
     except BaseException:
         doc.abortTransaction()
         raise
-    else:
-        doc.commitTransaction()
-        return result
+    return result
 
 
 def _safe_valid(obj) -> bool | None:
