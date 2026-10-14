@@ -175,7 +175,10 @@ def create_primitive(
     except BaseException:
         # Do not abort a transaction that already completed: it may have no
         # active pointer, or another GUI command may now own the global state.
-        if bool(doc.HasPendingTransaction):
+        # A booked application transaction may have no document undo record
+        # yet (e.g. addObject failed before its first edit). Still abort our
+        # booking, but never interfere with a different transaction owner.
+        if bool(doc.HasPendingTransaction) or FreeCAD.getActiveTransaction() is not None:
             doc.abortTransaction()
         raise
     return result
