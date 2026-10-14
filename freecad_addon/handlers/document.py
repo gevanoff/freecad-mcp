@@ -129,6 +129,11 @@ def create_primitive(
     if any(bool(open_doc.HasPendingTransaction)
            for open_doc in FreeCAD.listDocuments().values()):
         raise RuntimeError("A FreeCAD document has a pending GUI transaction; finish or cancel it first")
+    # With UndoMode=0, FreeCAD's document transactions do not record edits:
+    # abortTransaction() then cannot undo a partially created feature.
+    if getattr(doc, "UndoMode", None) != 1:
+        raise RuntimeError("FreeCAD document undo transactions are disabled")
+    undo_before = tuple(doc.UndoNames)
     doc.openTransaction("MCP: create primitive")
     try:
         obj = doc.addObject(type_id, "MCPPrimitive")
@@ -150,9 +155,28 @@ def create_primitive(
             raise ValueError("Created primitive has an invalid or null shape")
         result = {"document": doc.Name, "name": obj.Name, "label": obj.Label,
                   "type_id": obj.TypeId, "shape": summary}
-        doc.commitTransaction()
+        try:
+            doc.commitTransaction()
+        except BaseException as exc:
+            # Commit observers can throw *after* FreeCAD finalizes the undo
+            # transaction. In that case abortTransaction would be a no-op and
+            # reporting failure would hide a successfully created object.
+            if bool(doc.HasPendingTransaction):
+                raise
+            undo_after = tuple(doc.UndoNames)
+            committed = (undo_after != undo_before
+                         and "MCP: create primitive" in undo_after
+                         and doc.getObject(obj.Name) is obj)
+            if not committed:
+                raise RuntimeError("Primitive commit outcome cannot be verified") from exc
+            result["commit_observer_warning"] = (
+                "Primitive committed, but a FreeCAD post-commit observer raised"
+            )
     except BaseException:
-        doc.abortTransaction()
+        # Do not abort a transaction that already completed: it may have no
+        # active pointer, or another GUI command may now own the global state.
+        if bool(doc.HasPendingTransaction):
+            doc.abortTransaction()
         raise
     return result
 
