@@ -123,13 +123,16 @@ class RPCServer:
     def _read_frame(client: socket.socket) -> bytes:
         data = bytearray()
         deadline = time.monotonic() + CLIENT_READ_TIMEOUT
-        while len(data) <= MAX_FRAME_BYTES:
+        while True:
+            frame_remaining = MAX_FRAME_BYTES - len(data)
+            if frame_remaining <= 0:
+                raise ValueError("RPC request exceeds the 1 MiB frame limit")
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise TimeoutError("RPC frame deadline exceeded")
             if hasattr(client, "settimeout"):
                 client.settimeout(remaining)
-            part = client.recv(min(4096, MAX_FRAME_BYTES + 1 - len(data)))
+            part = client.recv(min(4096, frame_remaining))
             if not part:
                 raise ConnectionError("client disconnected before a complete frame")
             pos = part.find(b"\n")
@@ -137,7 +140,6 @@ class RPCServer:
                 data.extend(part[:pos])
                 return bytes(data)
             data.extend(part)
-        raise ValueError("RPC request exceeds the 1 MiB frame limit")
 
     def _handle(self, raw: bytes) -> dict[str, Any]:
         try:
@@ -168,7 +170,7 @@ class RPCServer:
         if "error" in job:
             return self._error(req_id, -32000, job["error"][:8192])
         response = {"jsonrpc": "2.0", "result": job["result"], "id": req_id}
-        if len(json.dumps(response, default=str).encode("utf-8")) > MAX_RESPONSE_BYTES:
+        if len(json.dumps(response, separators=(",", ":")).encode("utf-8")) + 1 > MAX_RESPONSE_BYTES:
             return self._error(req_id, -32004, "RPC response exceeds the 4 MiB limit")
         return response
 

@@ -9,8 +9,9 @@ on loopback for document inspection and controlled model operations.
 - The add-on binds only to `127.0.0.1`.
 - Every RPC request requires a per-user bearer token stored in the local config
   directory with owner-only permissions on POSIX systems.
-- Request frames, concurrent clients, queued operations, and execution time are
-  bounded.
+- Request frames (1 MiB), response frames (4 MiB including the newline),
+  concurrent clients, queued operations, and execution time are bounded.
+  Responses above the limit receive a JSON-RPC error rather than being sent.
 - Arbitrary Python execution is disabled by default. Enabling it grants the MCP
   client the ability to execute code with the FreeCAD process's full privileges.
 - This is a local-user boundary, not a sandbox against malicious code running
