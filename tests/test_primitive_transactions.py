@@ -71,7 +71,8 @@ class FakeDocument:
 
 
 def load_handler(document):
-    fake_freecad = types.SimpleNamespace(ActiveDocument=document, getDocument=lambda name: document)
+    fake_freecad = types.SimpleNamespace(ActiveDocument=document, getDocument=lambda name: document,
+                                         listDocuments=lambda: {"Test": document, **getattr(document, "other_documents", {})})
     with patch.dict(sys.modules, {"FreeCAD": fake_freecad}):
         spec = importlib.util.spec_from_file_location("freecad_document_under_test", HANDLER_PATH)
         module = importlib.util.module_from_spec(spec)
@@ -117,6 +118,16 @@ class PrimitiveTransactionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "pending GUI transaction"):
             load_handler(doc).create_primitive("box")
         self.assertEqual(doc.events, [])
+
+    def test_transaction_on_other_document_blocks_mutation(self):
+        doc = FakeDocument()
+        other = FakeDocument()
+        other.HasPendingTransaction = True
+        doc.other_documents = {"Other": other}
+        with self.assertRaisesRegex(RuntimeError, "pending GUI transaction"):
+            load_handler(doc).create_primitive("box")
+        self.assertEqual(doc.events, [])
+        self.assertEqual(other.events, [])
 
     def test_nonthrowing_recompute_error_rolls_back(self):
         doc = FakeDocument()
