@@ -42,17 +42,24 @@ class FakeDocument:
         self.recompute_error = recompute_error
         self.objects = []
         self.events = []
+        self.HasPendingTransaction = False
+        self.UndoMode = 1
+        self.UndoNames = []
 
     def openTransaction(self, label):
         self.events.append("open")
 
     def addObject(self, type_id, name):
         self.events.append("add")
+        self.HasPendingTransaction = True
         obj = types.SimpleNamespace(Name=name, Label=name, TypeId=type_id, Shape=self.shape,
                                     State=getattr(self, "object_state", []),
                                     isValid=lambda: not getattr(self, "object_invalid", False))
         self.objects.append(obj)
         return obj
+
+    def getObject(self, name):
+        return next((obj for obj in self.objects if obj.Name == name), None)
 
     def recompute(self, objects=None):
         self.events.append("recompute")
@@ -64,10 +71,16 @@ class FakeDocument:
         self.events.append("commit")
         if getattr(self, "commit_error", None):
             raise self.commit_error
+        self.HasPendingTransaction = False
+        self.UndoNames.insert(0, "MCP: create primitive")
+        if getattr(self, "post_commit_error", None):
+            raise self.post_commit_error
 
     def abortTransaction(self):
         self.events.append("abort")
-        self.objects.clear()
+        if self.HasPendingTransaction:
+            self.objects.clear()
+            self.HasPendingTransaction = False
 
 
 def load_handler(document, active_transaction=None, transaction_api_available=True):
@@ -96,6 +109,23 @@ class PrimitiveTransactionTests(unittest.TestCase):
             load_handler(doc).create_primitive("cylinder")
         self.assertEqual(doc.objects, [])
         self.assertEqual(doc.events, ["open", "add", "recompute", "abort"])
+
+    def test_disabled_undo_refuses_mutation(self):
+        doc = FakeDocument()
+        doc.UndoMode = 0
+        with self.assertRaisesRegex(RuntimeError, "undo transactions are disabled"):
+            load_handler(doc).create_primitive("box")
+        self.assertEqual(doc.events, [])
+        self.assertEqual(doc.objects, [])
+
+    def test_postcommit_observer_error_returns_committed_result(self):
+        doc = FakeDocument()
+        doc.post_commit_error = RuntimeError("observer raised after commit")
+        result = load_handler(doc).create_primitive("sphere")
+        self.assertEqual(len(doc.objects), 1)
+        self.assertIn("commit_observer_warning", result)
+        self.assertEqual(doc.events, ["open", "add", "recompute", "commit"])
+        self.assertEqual(doc.UndoNames, ["MCP: create primitive"])
 
     def test_invalid_shape_rolls_back(self):
         for shape in (FakeShape(valid=False), FakeShape(null=True)):
