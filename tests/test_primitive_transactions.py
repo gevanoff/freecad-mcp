@@ -57,6 +57,8 @@ class FakeDocument:
 
     def commitTransaction(self):
         self.events.append("commit")
+        if getattr(self, "commit_error", None):
+            raise self.commit_error
 
     def abortTransaction(self):
         self.events.append("abort")
@@ -95,6 +97,14 @@ class PrimitiveTransactionTests(unittest.TestCase):
                     load_handler(doc).create_primitive("sphere")
                 self.assertEqual(doc.objects, [])
                 self.assertEqual(doc.events[-1], "abort")
+
+    def test_commit_failure_attempts_rollback(self):
+        doc = FakeDocument()
+        doc.commit_error = RuntimeError("commit failed")
+        with self.assertRaisesRegex(RuntimeError, "commit failed"):
+            load_handler(doc).create_primitive("box")
+        self.assertEqual(doc.objects, [])
+        self.assertEqual(doc.events[-2:], ["commit", "abort"])
 
     def test_input_validation_never_opens_transaction(self):
         doc = FakeDocument()
