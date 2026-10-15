@@ -1,0 +1,3 @@
+import FreeCADGui as Gui
+Gui.activateWorkbench("FreeCADMCPWorkbench")
+Gui.runCommand("FreeCADMCPStart")

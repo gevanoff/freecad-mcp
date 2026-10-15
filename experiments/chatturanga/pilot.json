@@ -1,0 +1,8 @@
+[
+  {"tool": "list_documents"},
+  {"tool": "create_document", "arguments": {"name": "ChatturangaCurrent"}},
+  {"tool": "create_primitive", "arguments": {"kind": "cylinder", "label": "Foot Soldier Base", "radius": 11, "height": 4, "doc_name": "ChatturangaCurrent"}},
+  {"tool": "analyze_shape", "arguments": {"name": "MCPPrimitive", "doc_name": "ChatturangaCurrent"}},
+  {"tool": "get_screenshot", "arguments": {"width": 900, "height": 900}},
+  {"tool": "analyze_shape", "arguments": {"name": "MCPPrimitive", "doc_name": "ChatturangaCurrent"}}
+]

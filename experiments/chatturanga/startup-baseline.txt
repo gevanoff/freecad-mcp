@@ -1,0 +1,164 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+_____________ test_stdio_initialization_and_tool_discovery[False] _____________
+  + Exception Group Traceback (most recent call last):
+  |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\tests\test_mcp_startup.py", line 35, in test_stdio_initialization_and_tool_discovery
+  |     asyncio.run(asyncio.wait_for(handshake(), timeout=15))
+  |     ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "C:\Users\paper\AppData\Local\Python\pythoncore-3.14-64\Lib\asyncio\runners.py", line 204, in run
+  |     return runner.run(main)
+  |            ~~~~~~~~~~^^^^^^
+  |   File "C:\Users\paper\AppData\Local\Python\pythoncore-3.14-64\Lib\asyncio\runners.py", line 127, in run
+  |     return self._loop.run_until_complete(task)
+  |            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  |   File "C:\Users\paper\AppData\Local\Python\pythoncore-3.14-64\Lib\asyncio\base_events.py", line 719, in run_until_complete
+  |     return future.result()
+  |            ~~~~~~~~~~~~~^^
+  |   File "C:\Users\paper\AppData\Local\Python\pythoncore-3.14-64\Lib\asyncio\tasks.py", line 488, in wait_for
+  |     return await fut
+  |            ^^^^^^^^^
+  |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\tests\test_mcp_startup.py", line 27, in handshake
+  |     async with stdio_client(parameters) as (read, write):
+  |                ~~~~~~~~~~~~^^^^^^^^^^^^
+  |   File "C:\Users\paper\AppData\Local\Python\pythoncore-3.14-64\Lib\contextlib.py", line 235, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\client\stdio.py", line 201, in stdio_client
+  |     async with anyio.create_task_group() as tg:
+  |                ~~~~~~~~~~~~~~~~~~~~~~~^^
+  |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 847, in __aexit__
+  |     raise BaseExceptionGroup(
+  |         "unhandled errors in a TaskGroup", self._exceptions
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\client\stdio.py", line 205, in stdio_client
+    |     yield read_stream, write_stream
+    |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\tests\test_mcp_startup.py", line 28, in handshake
+    |     async with ClientSession(read, write) as session:
+    |                ~~~~~~~~~~~~~^^^^^^^^^^^^^
+    |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\client\session.py", line 514, in __aexit__
+    |     result = await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 847, in __aexit__
+    |     raise BaseExceptionGroup(
+    |         "unhandled errors in a TaskGroup", self._exceptions
+    |     ) from None
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\tests\test_mcp_startup.py", line 29, in handshake
+      |     await session.initialize()
+      |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\client\session.py", line 654, in initialize
+      |     result = await self.send_request(
+      |              ^^^^^^^^^^^^^^^^^^^^^^^^
+      |     ...<9 lines>...
+      |     )
+      |     ^
+      |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\client\session.py", line 586, in send_request
+      |     raw = await self._dispatcher.send_raw_request(method, data.get("params"), opts)
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\shared\jsonrpc_dispatcher.py", line 461, in send_raw_request
+      |     raise MCPError(code=outcome.code, message=outcome.message, data=outcome.data)
+      | mcp.shared.exceptions.MCPError: Connection closed
+      +------------------------------------
+---------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+
+  File "<frozen runpy>", line 198, in _run_module_as_main
+
+  File "<frozen runpy>", line 88, in _run_code
+
+  File "C:\Users\paper\Code\freecad-mcp-chatgpt\src\freecad_mcp\server.py", line 8, in <module>
+
+    from mcp.server.fastmcp import FastMCP
+
+  File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\server\fastmcp.py", line 16, in <module>
+
+    raise ModuleNotFoundError(_MESSAGE, name=__name__)
+
+ModuleNotFoundError: No module named 'mcp.server.fastmcp'. This is mcp 2.x, where FastMCP was renamed to MCPServer (from mcp.server.mcpserver import MCPServer) and other APIs changed; see the migration guide at https://py.sdk.modelcontextprotocol.io/v2/migration/#fastmcp-renamed-to-mcpserver or pin 'mcp<2' to keep running v1 code.
+
+_____________ test_stdio_initialization_and_tool_discovery[True] ______________
+  + Exception Group Traceback (most recent call last):
+  |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\tests\test_mcp_startup.py", line 35, in test_stdio_initialization_and_tool_discovery
+  |     asyncio.run(asyncio.wait_for(handshake(), timeout=15))
+  |     ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "C:\Users\paper\AppData\Local\Python\pythoncore-3.14-64\Lib\asyncio\runners.py", line 204, in run
+  |     return runner.run(main)
+  |            ~~~~~~~~~~^^^^^^
+  |   File "C:\Users\paper\AppData\Local\Python\pythoncore-3.14-64\Lib\asyncio\runners.py", line 127, in run
+  |     return self._loop.run_until_complete(task)
+  |            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  |   File "C:\Users\paper\AppData\Local\Python\pythoncore-3.14-64\Lib\asyncio\base_events.py", line 719, in run_until_complete
+  |     return future.result()
+  |            ~~~~~~~~~~~~~^^
+  |   File "C:\Users\paper\AppData\Local\Python\pythoncore-3.14-64\Lib\asyncio\tasks.py", line 488, in wait_for
+  |     return await fut
+  |            ^^^^^^^^^
+  |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\tests\test_mcp_startup.py", line 27, in handshake
+  |     async with stdio_client(parameters) as (read, write):
+  |                ~~~~~~~~~~~~^^^^^^^^^^^^
+  |   File "C:\Users\paper\AppData\Local\Python\pythoncore-3.14-64\Lib\contextlib.py", line 235, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\client\stdio.py", line 201, in stdio_client
+  |     async with anyio.create_task_group() as tg:
+  |                ~~~~~~~~~~~~~~~~~~~~~~~^^
+  |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 847, in __aexit__
+  |     raise BaseExceptionGroup(
+  |         "unhandled errors in a TaskGroup", self._exceptions
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\client\stdio.py", line 205, in stdio_client
+    |     yield read_stream, write_stream
+    |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\tests\test_mcp_startup.py", line 28, in handshake
+    |     async with ClientSession(read, write) as session:
+    |                ~~~~~~~~~~~~~^^^^^^^^^^^^^
+    |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\client\session.py", line 514, in __aexit__
+    |     result = await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 847, in __aexit__
+    |     raise BaseExceptionGroup(
+    |         "unhandled errors in a TaskGroup", self._exceptions
+    |     ) from None
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\tests\test_mcp_startup.py", line 29, in handshake
+      |     await session.initialize()
+      |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\client\session.py", line 654, in initialize
+      |     result = await self.send_request(
+      |              ^^^^^^^^^^^^^^^^^^^^^^^^
+      |     ...<9 lines>...
+      |     )
+      |     ^
+      |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\client\session.py", line 586, in send_request
+      |     raw = await self._dispatcher.send_raw_request(method, data.get("params"), opts)
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\shared\jsonrpc_dispatcher.py", line 461, in send_raw_request
+      |     raise MCPError(code=outcome.code, message=outcome.message, data=outcome.data)
+      | mcp.shared.exceptions.MCPError: Connection closed
+      +------------------------------------
+---------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+
+  File "<frozen runpy>", line 198, in _run_module_as_main
+
+  File "<frozen runpy>", line 88, in _run_code
+
+  File "C:\Users\paper\Code\freecad-mcp-chatgpt\src\freecad_mcp\server.py", line 8, in <module>
+
+    from mcp.server.fastmcp import FastMCP
+
+  File "C:\Users\paper\Code\freecad-mcp-chatgpt\.venv\Lib\site-packages\mcp\server\fastmcp.py", line 16, in <module>
+
+    raise ModuleNotFoundError(_MESSAGE, name=__name__)
+
+ModuleNotFoundError: No module named 'mcp.server.fastmcp'. This is mcp 2.x, where FastMCP was renamed to MCPServer (from mcp.server.mcpserver import MCPServer) and other APIs changed; see the migration guide at https://py.sdk.modelcontextprotocol.io/v2/migration/#fastmcp-renamed-to-mcpserver or pin 'mcp<2' to keep running v1 code.
+
+=========================== short test summary info ===========================
+FAILED tests/test_mcp_startup.py::test_stdio_initialization_and_tool_discovery[False]
+FAILED tests/test_mcp_startup.py::test_stdio_initialization_and_tool_discovery[True]
+2 failed in 2.56s
