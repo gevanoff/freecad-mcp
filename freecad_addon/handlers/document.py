@@ -133,7 +133,6 @@ def create_primitive(
     # abortTransaction() then cannot undo a partially created feature.
     if getattr(doc, "UndoMode", None) != 1:
         raise RuntimeError("FreeCAD document undo transactions are disabled")
-    undo_before = tuple(doc.UndoNames)
     doc.openTransaction("MCP: create primitive")
     owned_transaction = FreeCAD.getActiveTransaction()
     try:
@@ -162,13 +161,12 @@ def create_primitive(
             # Commit observers can throw *after* FreeCAD finalizes the undo
             # transaction. In that case abortTransaction would be a no-op and
             # reporting failure would hide a successfully created object.
-            if bool(doc.HasPendingTransaction):
+            current_transaction = FreeCAD.getActiveTransaction()
+            if current_transaction == owned_transaction and owned_transaction is not None:
                 raise
-            undo_after = tuple(doc.UndoNames)
-            committed = (undo_after != undo_before
-                         and "MCP: create primitive" in undo_after
-                         and doc.getObject(obj.Name) is obj)
-            if not committed:
+            # Once our booking is gone, a post-commit observer may have
+            # started a different transaction. Never alter that ownership.
+            if doc.getObject(obj.Name) is not obj:
                 raise RuntimeError("Primitive commit outcome cannot be verified") from exc
             result["commit_observer_warning"] = (
                 "Primitive committed, but a FreeCAD post-commit observer raised"
@@ -180,9 +178,7 @@ def create_primitive(
         # yet (e.g. addObject failed before its first edit). Still abort our
         # booking, but never interfere with a different transaction owner.
         active_transaction = FreeCAD.getActiveTransaction()
-        if bool(doc.HasPendingTransaction) or (
-            owned_transaction is not None and active_transaction == owned_transaction
-        ):
+        if owned_transaction is not None and active_transaction == owned_transaction:
             doc.abortTransaction()
         raise
     return result
