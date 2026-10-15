@@ -206,6 +206,9 @@ def _safe_value(value):
 
 
 def _shape_summary(shape) -> dict:
+    # BoundBox may use a cached display mesh and under-report curved surfaces.
+    # Query the BRep geometry so CAD dimensions do not depend on view quality.
+    bounds = shape.BoundBox if shape.isNull() else shape.optimalBoundingBox(False, False)
     return {
         "shape_type": shape.ShapeType,
         "is_valid": bool(shape.isValid()),
@@ -218,8 +221,8 @@ def _shape_summary(shape) -> dict:
             "solids": len(shape.Solids),
         },
         "bounds": {
-            "min": [shape.BoundBox.XMin, shape.BoundBox.YMin, shape.BoundBox.ZMin],
-            "max": [shape.BoundBox.XMax, shape.BoundBox.YMax, shape.BoundBox.ZMax],
+            "min": [bounds.XMin, bounds.YMin, bounds.ZMin],
+            "max": [bounds.XMax, bounds.YMax, bounds.ZMax],
         },
         "area": float(shape.Area),
         "volume": float(shape.Volume) if shape.Solids else None,
