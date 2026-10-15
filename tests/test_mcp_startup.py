@@ -2,14 +2,15 @@
 import asyncio
 import os
 import sys
+import tempfile
+import unittest
+from pathlib import Path
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-import pytest
 
 
-@pytest.mark.parametrize("allow_script", [False, True])
-def test_stdio_initialization_and_tool_discovery(tmp_path, allow_script):
+def check_startup(tmp_path, allow_script):
     token = tmp_path / "token"
     token.write_text("startup-test-credential-" * 3, encoding="utf-8")
     token.chmod(0o600)
@@ -33,3 +34,13 @@ def test_stdio_initialization_and_tool_discovery(tmp_path, allow_script):
                 assert ("execute_script" in names) == allow_script
 
     asyncio.run(asyncio.wait_for(handshake(), timeout=15))
+
+
+class MCPStartupTests(unittest.TestCase):
+    def test_default_tools_over_stdio(self):
+        with tempfile.TemporaryDirectory() as folder:
+            check_startup(Path(folder), False)
+
+    def test_script_opt_in_over_stdio(self):
+        with tempfile.TemporaryDirectory() as folder:
+            check_startup(Path(folder), True)
