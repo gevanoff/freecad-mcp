@@ -23,7 +23,7 @@ old_bounds = data(baseline[3])["bounds"]
 assert abs(old_bounds["max"][0] - old_bounds["min"][0] - 22) > 0.01
 for index in (3, 5):
     assert data(fixed[index])["bounds"] == {"min": [-11, -11, 0], "max": [11, 11, 4]}
-for run in ("fixed", "model", "validation"):
+for run in ("fixed", "model", "validation", "final-framed"):
     for record in records(run):
         assert not record["isError"], record
         result = data(record)
@@ -39,6 +39,8 @@ for stage in ("native", "reopened_native", "step_reimport"):
     assert result["valid"] and result["closed"] and result["solids"] == 1
     assert result["bounds_mm"] == [22, 22, 31.5]
 assert report["stl_reimport"]["solid"]
+tools = json.loads((root / "results/final-framed/tools.json").read_text(encoding="utf-8"))
+assert "execute_script" not in {tool["name"] for tool in tools["tools"]}
 handler = root.parents[1] / "freecad_addon/handlers/document.py"
 assert hashlib.sha256(handler.read_bytes()).hexdigest() == report["installed_document_handler_sha256"]
 print("PASS: equivalent A/B requests, exact live bounds, successful model/export tools, matching artifact and installed-code hashes")

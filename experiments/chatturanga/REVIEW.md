@@ -38,6 +38,12 @@ were made to those mechanisms.
 
 ## Final scoped pass
 
+The default-mode reopen exposed a clipped screenshot even though geometry was
+unchanged. Updated the startup macro to set an isometric view and fit the model;
+restarted and inspected `results/final-framed/02-screenshot.png`, which includes
+the entire silhouette. The native file remains unmodified and the default tool
+list omits execute_script. The final evidence checker covers this run too.
+
 Rechecked the production diff, current native master, exported-file hashes and
 MCP screenshots. No substantial unresolved issue remains for these three repairs
 or this digital handoff. The simple silhouette reads as a pawn/foot-soldier study,

@@ -1,6 +1,7 @@
 import traceback
 from pathlib import Path
 import FreeCADGui as Gui
+import FreeCAD as App
 
 log = Path(__file__).with_name("startup-gui.txt")
 try:
@@ -8,6 +9,11 @@ try:
     Gui.runCommand("FreeCADMCPStart")
     import mcp_commands
     assert mcp_commands._get_server().is_running
+    if App.ActiveDocument is not None:
+        view = Gui.activeDocument().activeView()
+        view.viewAxonometric()
+        view.fitAll()
+        Gui.updateGui()
     log.write_text("RPC running on loopback\n", encoding="utf-8")
 except Exception:
     log.write_text(traceback.format_exc(), encoding="utf-8")
