@@ -113,18 +113,75 @@ def create_primitive(
 
     doc = _resolve_doc(doc_name)
     type_id = {"box": "Part::Box", "cylinder": "Part::Cylinder", "sphere": "Part::Sphere"}[kind]
-    obj = doc.addObject(type_id, "MCPPrimitive")
-    if kind == "box":
-        obj.Length, obj.Width, obj.Height = float(length), float(width), float(height)
-    elif kind == "cylinder":
-        obj.Radius, obj.Height = float(radius), float(height)
-    else:
-        obj.Radius = float(radius)
-    if label:
-        obj.Label = label
-    doc.recompute()
-    return {"document": doc.Name, "name": obj.Name, "label": obj.Label, "type_id": obj.TypeId,
-            "shape": _shape_summary(obj.Shape)}
+    # A failed recompute or invalid shape must not leave a partially constructed
+    # feature behind. FreeCAD transactions also preserve undo history on success.
+    # FreeCAD transaction ownership is application-wide. Opening a transaction
+    # on B can commit an existing GUI transaction on A, so inspect every document.
+    # Document.HasPendingTransaction is false for a GUI transaction booked
+    # before its first edit. The application-level transaction must be checked
+    # first or doc.openTransaction() can replace the GUI's undo/Cancel scope.
+    try:
+        booked_transaction = FreeCAD.getActiveTransaction()
+    except (AttributeError, TypeError) as exc:
+        raise RuntimeError("Cannot verify FreeCAD application transaction ownership") from exc
+    if booked_transaction is not None:
+        raise RuntimeError("A FreeCAD GUI transaction is already booked; finish or cancel it first")
+    if any(bool(open_doc.HasPendingTransaction)
+           for open_doc in FreeCAD.listDocuments().values()):
+        raise RuntimeError("A FreeCAD document has a pending GUI transaction; finish or cancel it first")
+    # With UndoMode=0, FreeCAD's document transactions do not record edits:
+    # abortTransaction() then cannot undo a partially created feature.
+    if getattr(doc, "UndoMode", None) != 1:
+        raise RuntimeError("FreeCAD document undo transactions are disabled")
+    doc.openTransaction("MCP: create primitive")
+    owned_transaction = FreeCAD.getActiveTransaction()
+    try:
+        obj = doc.addObject(type_id, "MCPPrimitive")
+        if kind == "box":
+            obj.Length, obj.Width, obj.Height = float(length), float(width), float(height)
+        elif kind == "cylinder":
+            obj.Radius, obj.Height = float(radius), float(height)
+        else:
+            obj.Radius = float(radius)
+        if label:
+            obj.Label = label
+        doc.recompute([obj])
+        # FreeCAD often records execution failures in State instead of raising.
+        state = [str(item) for item in getattr(obj, "State", [])]
+        if "Invalid" in state or "Error" in state or not _safe_valid(obj):
+            raise ValueError("Created primitive failed recomputation: " + ", ".join(state))
+        summary = _shape_summary(obj.Shape)
+        if summary["is_null"] or not summary["is_valid"]:
+            raise ValueError("Created primitive has an invalid or null shape")
+        result = {"document": doc.Name, "name": obj.Name, "label": obj.Label,
+                  "type_id": obj.TypeId, "shape": summary}
+        try:
+            doc.commitTransaction()
+        except BaseException as exc:
+            # Commit observers can throw *after* FreeCAD finalizes the undo
+            # transaction. In that case abortTransaction would be a no-op and
+            # reporting failure would hide a successfully created object.
+            current_transaction = FreeCAD.getActiveTransaction()
+            if current_transaction == owned_transaction and owned_transaction is not None:
+                raise
+            # Once our booking is gone, a post-commit observer may have
+            # started a different transaction. Never alter that ownership.
+            if doc.getObject(obj.Name) is not obj:
+                raise RuntimeError("Primitive commit outcome cannot be verified") from exc
+            result["commit_observer_warning"] = (
+                "Primitive committed, but a FreeCAD post-commit observer raised"
+            )
+    except BaseException:
+        # Do not abort a transaction that already completed: it may have no
+        # active pointer, or another GUI command may now own the global state.
+        # A booked application transaction may have no document undo record
+        # yet (e.g. addObject failed before its first edit). Still abort our
+        # booking, but never interfere with a different transaction owner.
+        active_transaction = FreeCAD.getActiveTransaction()
+        if owned_transaction is not None and active_transaction == owned_transaction:
+            doc.abortTransaction()
+        raise
+    return result
 
 
 def _safe_valid(obj) -> bool | None:
