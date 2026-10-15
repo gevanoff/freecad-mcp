@@ -23,9 +23,13 @@ a design reference.
 
 ## Development status
 
-Initial implementation in progress. The stdio server and authenticated bridge
-are being built first; the add-on's FreeCAD handlers follow. Live FreeCAD
-integration has not yet been tested.
+The authenticated bridge and initial modeling/inspection tools have been tested
+with FreeCAD 1.1.4 on Windows. A Chatturanga foot-soldier pilot was created through
+MCP and saved/reopened as FCStd, STEP and STL. See the
+[reproducible experiment and limits](experiments/chatturanga/README.md).
+The standard tools currently create basic primitives and inspect documents;
+positioning, Boolean composition, saving and export require the optional script
+tool. This is not yet a full constrained modeling toolset.
 
 ## Install the MCP process
 
@@ -40,6 +44,13 @@ On Windows, activate `.venv\Scripts\activate` instead. Install or symlink the
 `freecad_addon` directory into FreeCAD's `Mod` directory, then restart FreeCAD.
 The add-on starts with its RPC listener stopped; activate the **FreeCAD MCP**
 workbench and choose **Start RPC Server**.
+
+For FreeCAD 1.1 on Windows, the user addon directory is normally
+`%APPDATA%\FreeCAD\v1-1\Mod\freecad_addon` (containing `InitGui.py` directly).
+Confirm the running instance's location with `FreeCAD.getUserAppDataDir()` if
+using a portable or packaged launcher; Windows app virtualization can redirect
+this directory. The Python server currently supports MCP SDK 1.x and declares
+`mcp[cli]>=1.2.0,<2`; install from this checkout to obtain that constraint.
 
 Configure any MCP client that supports stdio servers to run `freecad-mcp` from
 the project environment. For example, the generic command shape is:

@@ -1,0 +1,63 @@
+[
+  {
+    "tool": "execute_script",
+    "arguments": {
+      "script": "EXPERIMENT_DIR = 'C:\\\\Users\\\\paper\\\\Code\\\\freecad-mcp-chatgpt\\\\experiments\\\\chatturanga'\n\"\"\"Build the four-primitive study through the opt-in execute_script MCP tool.\"\"\"\nimport Part\n\ndoc = App.getDocument(\"ChatturangaCurrent\")\nassert len(doc.Objects) == 1 and doc.Objects[0].Name == \"MCPPrimitive\"\nbase = doc.MCPPrimitive\nbase.Label = \"Base (22 mm diameter)\"\nbody = doc.addObject(\"Part::Cone\", \"Body\")\nbody.Radius1, body.Radius2, body.Height = 8.5, 4.5, 18\nbody.Placement.Base.z = 3\ncollar = doc.addObject(\"Part::Cylinder\", \"Collar\")\ncollar.Radius, collar.Height = 6, 2.5\ncollar.Placement.Base.z = 20\nhead = doc.addObject(\"Part::Sphere\", \"Head\")\nhead.Radius = 5.5\nhead.Placement.Base.z = 26\npiece = doc.addObject(\"Part::MultiFuse\", \"FootSoldier\")\npiece.Shapes = [base, body, collar, head]\npiece.Refine = True\ndoc.recompute()\nassert piece.Shape.isValid() and len(piece.Shape.Solids) == 1\nfor operand in piece.Shapes:\n    operand.ViewObject.Visibility = False\npiece.Label = \"Chatturanga Foot Soldier\"\npiece.ViewObject.ShapeColor = (0.78, 0.60, 0.34)\npiece.ViewObject.Deviation = 0.1\nGui.activeDocument().activeView().viewAxonometric()\nGui.activeDocument().activeView().fitAll()\nGui.updateGui()\nprint(\"Created one valid solid with four editable operands\")\n"
+    },
+    "isError": false,
+    "result": {
+      "success": true,
+      "stdout": "Created one valid solid with four editable operands\n",
+      "stderr": "",
+      "error": null
+    }
+  },
+  {
+    "tool": "analyze_shape",
+    "arguments": {
+      "name": "FootSoldier",
+      "doc_name": "ChatturangaCurrent"
+    },
+    "isError": false,
+    "result": {
+      "shape_type": "Compound",
+      "is_valid": true,
+      "is_null": false,
+      "topology": {
+        "vertices": 8,
+        "edges": 12,
+        "wires": 11,
+        "faces": 8,
+        "solids": 1
+      },
+      "bounds": {
+        "min": [
+          -11.0,
+          -11.0,
+          0.0
+        ],
+        "max": [
+          11.0,
+          11.0,
+          31.5
+        ]
+      },
+      "area": 1995.7059339501989,
+      "volume": 4616.1179116811645
+    }
+  },
+  {
+    "tool": "get_screenshot",
+    "arguments": {
+      "width": 900,
+      "height": 900
+    },
+    "isError": false,
+    "result": {
+      "format": "png",
+      "width": 900,
+      "height": 900,
+      "image_file": "02-screenshot.png"
+    }
+  }
+]

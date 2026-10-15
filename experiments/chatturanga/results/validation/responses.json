@@ -1,0 +1,343 @@
+[
+  {
+    "tool": "execute_script",
+    "arguments": {
+      "script": "EXPERIMENT_DIR = 'C:\\\\Users\\\\paper\\\\Code\\\\freecad-mcp-chatgpt\\\\experiments\\\\chatturanga'\n\"\"\"Executed inside FreeCAD through the MCP execute_code tool.\"\"\"\nimport hashlib\nimport json\nfrom pathlib import Path\n\nimport Import\nimport Mesh\nimport MeshPart\nimport Part\n\nfolder = Path(EXPERIMENT_DIR) / \"artifacts\"\nfolder.mkdir(parents=True, exist_ok=True)\ndoc = App.getDocument(\"ChatturangaCurrent\")\npiece = doc.getObject(\"FootSoldier\")\nassert [obj.Name for obj in piece.Shapes] == [\"MCPPrimitive\", \"Body\", \"Collar\", \"Head\"]\n\n\ndef check_shape(shape):\n    # Default BoundBox can use the viewport's coarse triangulation. Check the\n    # actual curved BRep surfaces, independently of display tessellation.\n    bounds = shape.optimalBoundingBox(False, False)\n    result = {\n        \"valid\": shape.isValid(),\n        \"closed\": shape.isClosed(),\n        \"solids\": len(shape.Solids),\n        \"bounds_mm\": [bounds.XLength, bounds.YLength, bounds.ZLength],\n        \"z_min_mm\": bounds.ZMin,\n        \"volume_mm3\": shape.Volume,\n    }\n    assert result[\"valid\"] and result[\"closed\"] and result[\"solids\"] == 1, result\n    assert all(abs(a - b) < 1e-5 for a, b in zip(result[\"bounds_mm\"], [22, 22, 31.5])), result\n    assert abs(result[\"z_min_mm\"]) < 1e-5 and result[\"volume_mm3\"] > 0, result\n    return result\n\n\nnative_checks = check_shape(piece.Shape)\nfor operand in piece.Shapes:\n    operand.ViewObject.Visibility = False\npiece.Label = \"Chatturanga Foot Soldier\"\npiece.ViewObject.ShapeColor = (0.78, 0.60, 0.34)\npiece.ViewObject.DisplayMode = \"Flat Lines\"\ndoc.recompute()\nnative = folder / \"ChatturangaFootSoldier.FCStd\"\nstep = folder / \"ChatturangaFootSoldier.step\"\nstl = folder / \"ChatturangaFootSoldier.stl\"\ndoc.saveAs(str(native))\nPart.export([piece], str(step))\nmesh = MeshPart.meshFromShape(Shape=piece.Shape, LinearDeflection=0.05,\n                              AngularDeflection=0.15, Relative=False)\nassert mesh.isSolid()\nmesh.write(str(stl))\n\nstep_doc = App.newDocument(\"StepRoundTrip\")\nImport.insert(str(step), step_doc.Name)\nstep_doc.recompute()\nimported_shapes = [obj.Shape for obj in step_doc.Objects if hasattr(obj, \"Shape\") and not obj.Shape.isNull()]\nassert len(imported_shapes) == 1, len(imported_shapes)\nstep_checks = check_shape(imported_shapes[0])\nassert abs(step_checks[\"volume_mm3\"] - native_checks[\"volume_mm3\"]) < 1e-5\nApp.closeDocument(step_doc.Name)\n\nimported_mesh = Mesh.Mesh(str(stl))\nmesh_bounds = imported_mesh.BoundBox\nstl_checks = {\n    \"solid\": imported_mesh.isSolid(),\n    \"facets\": imported_mesh.CountFacets,\n    \"bounds_mm\": [mesh_bounds.XLength, mesh_bounds.YLength, mesh_bounds.ZLength],\n    \"volume_mm3\": imported_mesh.Volume,\n}\nassert stl_checks[\"solid\"] and stl_checks[\"facets\"] > 0\nassert all(abs(a - b) < 0.1 for a, b in zip(stl_checks[\"bounds_mm\"], [22, 22, 31.5]))\nassert abs(stl_checks[\"volume_mm3\"] / native_checks[\"volume_mm3\"] - 1) < 0.01\n\nApp.closeDocument(doc.Name)\nreopened = App.openDocument(str(native))\nreopened_checks = check_shape(reopened.FootSoldier.Shape)\nassert len(reopened.Objects) == 5\nassert [obj.Name for obj in reopened.FootSoldier.Shapes] == [\"MCPPrimitive\", \"Body\", \"Collar\", \"Head\"]\nGui.activeDocument().activeView().viewAxonometric()\nGui.activeDocument().activeView().fitAll()\nfrom handlers import document as document_handler\nreport = {\n    \"freecad_version\": App.Version(),\n    \"installed_document_handler_sha256\": hashlib.sha256(Path(document_handler.__file__).read_bytes()).hexdigest(),\n    \"native\": native_checks, \"reopened_native\": reopened_checks,\n    \"step_reimport\": step_checks, \"stl_reimport\": stl_checks,\n    \"units\": \"mm (STL consumer must select mm)\", \"axes\": \"Z up, base on Z=0\",\n    \"physical_validation\": \"Not printed or physically tested\",\n    \"artifact_sha256\": {file.name: hashlib.sha256(file.read_bytes()).hexdigest() for file in (native, step, stl)},\n}\n(folder / \"validation.json\").write_text(json.dumps(report, indent=2), encoding=\"utf-8\")\nprint(json.dumps(report, indent=2))\n\n"
+    },
+    "isError": false,
+    "result": {
+      "success": true,
+      "stdout": "{\n  \"freecad_version\": [\n    \"1\",\n    \"1\",\n    \"4\",\n    \"20260928 (Git shallow)\",\n    \"Unknown\",\n    \"2026/09/28 13:46:34\",\n    \"(HEAD detached at 4fd3bf320)\",\n    \"4fd3bf320d9566a27e60069fc8387448aaa3a094\"\n  ],\n  \"installed_document_handler_sha256\": \"bb8aded50fbbf5bf074a3aed50c33b40f24eabf5db6774eae36a6f43cf3ec791\",\n  \"native\": {\n    \"valid\": true,\n    \"closed\": true,\n    \"solids\": 1,\n    \"bounds_mm\": [\n      22.0,\n      22.0,\n      31.5\n    ],\n    \"z_min_mm\": 0.0,\n    \"volume_mm3\": 4616.1179116811645\n  },\n  \"reopened_native\": {\n    \"valid\": true,\n    \"closed\": true,\n    \"solids\": 1,\n    \"bounds_mm\": [\n      22.0,\n      22.0,\n      31.5\n    ],\n    \"z_min_mm\": 0.0,\n    \"volume_mm3\": 4616.117911681165\n  },\n  \"step_reimport\": {\n    \"valid\": true,\n    \"closed\": true,\n    \"solids\": 1,\n    \"bounds_mm\": [\n      22.0,\n      22.0,\n      31.5\n    ],\n    \"z_min_mm\": 0.0,\n    \"volume_mm3\": 4616.1179116809435\n  },\n  \"stl_reimport\": {\n    \"solid\": true,\n    \"facets\": 4238,\n    \"bounds_mm\": [\n      22.0,\n      22.0,\n      31.5\n    ],\n    \"volume_mm3\": 4605.14697265625\n  },\n  \"units\": \"mm (STL consumer must select mm)\",\n  \"axes\": \"Z up, base on Z=0\",\n  \"physical_validation\": \"Not printed or physically tested\",\n  \"artifact_sha256\": {\n    \"ChatturangaFootSoldier.FCStd\": \"95afebe2cd8750f880439921db2005075a33674aa075a27d9cd3e88e037493ad\",\n    \"ChatturangaFootSoldier.step\": \"75e611f2261ccdbcfb033ea7cce963c0647da69660d4911f038dea3a66aea3e2\",\n    \"ChatturangaFootSoldier.stl\": \"233c30f16c1c62059c85291d607233952df94f3d73ec529261fef81017ce68e7\"\n  }\n}\n",
+      "stderr": "",
+      "error": null
+    }
+  },
+  {
+    "tool": "get_screenshot",
+    "arguments": {
+      "width": 900,
+      "height": 900
+    },
+    "isError": false,
+    "result": {
+      "format": "png",
+      "width": 900,
+      "height": 900,
+      "image_file": "01-screenshot.png"
+    }
+  },
+  {
+    "tool": "analyze_shape",
+    "arguments": {
+      "name": "FootSoldier",
+      "doc_name": "ChatturangaFootSoldier"
+    },
+    "isError": false,
+    "result": {
+      "shape_type": "Compound",
+      "is_valid": true,
+      "is_null": false,
+      "topology": {
+        "vertices": 8,
+        "edges": 12,
+        "wires": 11,
+        "faces": 8,
+        "solids": 1
+      },
+      "bounds": {
+        "min": [
+          -11.0,
+          -11.0,
+          0.0
+        ],
+        "max": [
+          11.0,
+          11.0,
+          31.5
+        ]
+      },
+      "area": 1995.7059339501989,
+      "volume": 4616.117911681165
+    }
+  },
+  {
+    "tool": "get_document_graph",
+    "arguments": {
+      "doc_name": "ChatturangaFootSoldier"
+    },
+    "isError": false,
+    "result": {
+      "name": "ChatturangaFootSoldier",
+      "label": "ChatturangaFootSoldier",
+      "objects": [
+        {
+          "name": "MCPPrimitive",
+          "label": "Base (22 mm diameter)",
+          "type_id": "Part::Cylinder",
+          "properties": {
+            "Angle": "360.0 deg",
+            "AttacherEngine": "Engine 3D",
+            "AttacherType": "Attacher::AttachEngine3D",
+            "AttachmentOffset": {
+              "base": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "AttachmentSupport": [],
+            "ExpressionEngine": [],
+            "FirstAngle": "0.0 deg",
+            "Height": "4.0 mm",
+            "Label": "Base (22 mm diameter)",
+            "Label2": "",
+            "MapMode": "Deactivated",
+            "MapPathParameter": 0.0,
+            "MapReversed": false,
+            "Placement": {
+              "base": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "Radius": "11.0 mm",
+            "SecondAngle": "0.0 deg",
+            "Shape": "<Solid object at 0000013BE2C576C0>",
+            "ShapeMaterial": "Default",
+            "Visibility": false,
+            "_ElementMapVersion": "15.70200.5"
+          },
+          "dependencies": [],
+          "is_valid": true,
+          "state": [
+            "Up-to-date"
+          ]
+        },
+        {
+          "name": "Body",
+          "label": "Body",
+          "type_id": "Part::Cone",
+          "properties": {
+            "Angle": "360.0 deg",
+            "AttacherEngine": "Engine 3D",
+            "AttacherType": "Attacher::AttachEngine3D",
+            "AttachmentOffset": {
+              "base": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "AttachmentSupport": [],
+            "ExpressionEngine": [],
+            "Height": "18.0 mm",
+            "Label": "Body",
+            "Label2": "",
+            "MapMode": "Deactivated",
+            "MapPathParameter": 0.0,
+            "MapReversed": false,
+            "Placement": {
+              "base": [
+                0.0,
+                0.0,
+                3.0
+              ],
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "Radius1": "8.5 mm",
+            "Radius2": "4.5 mm",
+            "Shape": "<Solid object at 0000013BE2C571F0>",
+            "ShapeMaterial": "Default",
+            "Visibility": false,
+            "_ElementMapVersion": "15.70200.5"
+          },
+          "dependencies": [],
+          "is_valid": true,
+          "state": [
+            "Up-to-date"
+          ]
+        },
+        {
+          "name": "Collar",
+          "label": "Collar",
+          "type_id": "Part::Cylinder",
+          "properties": {
+            "Angle": "360.0 deg",
+            "AttacherEngine": "Engine 3D",
+            "AttacherType": "Attacher::AttachEngine3D",
+            "AttachmentOffset": {
+              "base": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "AttachmentSupport": [],
+            "ExpressionEngine": [],
+            "FirstAngle": "0.0 deg",
+            "Height": "2.5 mm",
+            "Label": "Collar",
+            "Label2": "",
+            "MapMode": "Deactivated",
+            "MapPathParameter": 0.0,
+            "MapReversed": false,
+            "Placement": {
+              "base": [
+                0.0,
+                0.0,
+                20.0
+              ],
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "Radius": "6.0 mm",
+            "SecondAngle": "0.0 deg",
+            "Shape": "<Solid object at 0000013BE2C574B0>",
+            "ShapeMaterial": "Default",
+            "Visibility": false,
+            "_ElementMapVersion": "15.70200.5"
+          },
+          "dependencies": [],
+          "is_valid": true,
+          "state": [
+            "Up-to-date"
+          ]
+        },
+        {
+          "name": "Head",
+          "label": "Head",
+          "type_id": "Part::Sphere",
+          "properties": {
+            "Angle1": "-90.0 deg",
+            "Angle2": "90.0 deg",
+            "Angle3": "360.0 deg",
+            "AttacherEngine": "Engine 3D",
+            "AttacherType": "Attacher::AttachEngine3D",
+            "AttachmentOffset": {
+              "base": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "AttachmentSupport": [],
+            "ExpressionEngine": [],
+            "Label": "Head",
+            "Label2": "",
+            "MapMode": "Deactivated",
+            "MapPathParameter": 0.0,
+            "MapReversed": false,
+            "Placement": {
+              "base": [
+                0.0,
+                0.0,
+                26.0
+              ],
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "Radius": "5.5 mm",
+            "Shape": "<Solid object at 0000013BE2C57350>",
+            "ShapeMaterial": "Default",
+            "Visibility": false,
+            "_ElementMapVersion": "15.70200.5"
+          },
+          "dependencies": [],
+          "is_valid": true,
+          "state": [
+            "Up-to-date"
+          ]
+        },
+        {
+          "name": "FootSoldier",
+          "label": "Chatturanga Foot Soldier",
+          "type_id": "Part::MultiFuse",
+          "properties": {
+            "ExpressionEngine": [],
+            "History": null,
+            "Label": "Chatturanga Foot Soldier",
+            "Label2": "",
+            "Placement": {
+              "base": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "Refine": true,
+            "Shape": "<Compound object at 0000013BE2C57F00>",
+            "ShapeMaterial": "Default",
+            "Shapes": [
+              "MCPPrimitive",
+              "Body",
+              "Collar",
+              "Head"
+            ],
+            "Visibility": true,
+            "_ElementMapVersion": "15.70200.5"
+          },
+          "dependencies": [
+            "MCPPrimitive",
+            "Body",
+            "Collar",
+            "Head"
+          ],
+          "is_valid": true,
+          "state": [
+            "Up-to-date"
+          ]
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "C:/Users/paper/Code/freecad-mcp-chatgpt/experiments/chatturanga/start_rpc.FCMacro", line 7, in <module>
+    Gui.activateWorkbench("FreeCADMCPWorkbench")
+KeyError: "No such workbench 'FreeCADMCPWorkbench'"

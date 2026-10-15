@@ -1,0 +1,3 @@
+[
+  {"tool": "execute_script", "arguments": {"script": "from PySide import QtCore\nassert list(App.listDocuments()) == ['ChatturangaFootSoldier']\nassert App.ActiveDocument.FileName.endswith('ChatturangaFootSoldier.FCStd')\nApp.closeDocument('ChatturangaFootSoldier')\nQtCore.QTimer.singleShot(1000, Gui.getMainWindow().close)\nprint('Saved test session closed for default-mode restart')"}}
+]

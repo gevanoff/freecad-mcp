@@ -1,0 +1,5 @@
+[
+  {"tool": "execute_script", "script_file": "model_piece.py"},
+  {"tool": "analyze_shape", "arguments": {"name": "FootSoldier", "doc_name": "ChatturangaCurrent"}},
+  {"tool": "get_screenshot", "arguments": {"width": 900, "height": 900}}
+]

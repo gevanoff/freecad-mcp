@@ -1,0 +1,270 @@
+{
+  "meta": null,
+  "nextCursor": null,
+  "tools": [
+    {
+      "name": "list_documents",
+      "title": null,
+      "description": "List open FreeCAD documents and basic status.",
+      "inputSchema": {
+        "properties": {},
+        "title": "list_documentsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Result",
+            "type": "array"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "list_documentsOutput",
+        "type": "object"
+      },
+      "icons": null,
+      "annotations": null,
+      "meta": null,
+      "execution": null
+    },
+    {
+      "name": "get_document_graph",
+      "title": null,
+      "description": "Inspect a document's feature tree, dependencies, and object validity.",
+      "inputSchema": {
+        "properties": {
+          "doc_name": {
+            "default": "",
+            "title": "Doc Name",
+            "type": "string"
+          }
+        },
+        "title": "get_document_graphArguments",
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": null,
+      "meta": null,
+      "execution": null
+    },
+    {
+      "name": "inspect_object",
+      "title": null,
+      "description": "Inspect a FreeCAD object's properties and basic geometric state.",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "doc_name": {
+            "default": "",
+            "title": "Doc Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "inspect_objectArguments",
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": null,
+      "meta": null,
+      "execution": null
+    },
+    {
+      "name": "analyze_shape",
+      "title": null,
+      "description": "Inspect a shape's topology, validity, bounds, area, and volume.",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "doc_name": {
+            "default": "",
+            "title": "Doc Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "analyze_shapeArguments",
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": null,
+      "meta": null,
+      "execution": null
+    },
+    {
+      "name": "get_sketch_diagnostics",
+      "title": null,
+      "description": "Report sketch constraints, conflicts, redundancies, and degrees of freedom.",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "doc_name": {
+            "default": "",
+            "title": "Doc Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "get_sketch_diagnosticsArguments",
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": null,
+      "meta": null,
+      "execution": null
+    },
+    {
+      "name": "tracked_recompute",
+      "title": null,
+      "description": "Recompute a document and report object validity changes.",
+      "inputSchema": {
+        "properties": {
+          "doc_name": {
+            "default": "",
+            "title": "Doc Name",
+            "type": "string"
+          }
+        },
+        "title": "tracked_recomputeArguments",
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": null,
+      "meta": null,
+      "execution": null
+    },
+    {
+      "name": "create_primitive",
+      "title": null,
+      "description": "Create a box, cylinder, or sphere in an open document using bounded dimensions.",
+      "inputSchema": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "box",
+              "cylinder",
+              "sphere"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "title": "Label",
+            "type": "string"
+          },
+          "length": {
+            "default": 10,
+            "title": "Length",
+            "type": "number"
+          },
+          "width": {
+            "default": 10,
+            "title": "Width",
+            "type": "number"
+          },
+          "height": {
+            "default": 10,
+            "title": "Height",
+            "type": "number"
+          },
+          "radius": {
+            "default": 5,
+            "title": "Radius",
+            "type": "number"
+          },
+          "doc_name": {
+            "default": "",
+            "title": "Doc Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "create_primitiveArguments",
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": null,
+      "meta": null,
+      "execution": null
+    },
+    {
+      "name": "create_document",
+      "title": null,
+      "description": "Create and activate a new document with a restricted identifier.",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "create_documentArguments",
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": null,
+      "meta": null,
+      "execution": null
+    },
+    {
+      "name": "get_screenshot",
+      "title": null,
+      "description": "Capture the active FreeCAD viewport as a PNG data URL payload.",
+      "inputSchema": {
+        "properties": {
+          "width": {
+            "default": 1024,
+            "title": "Width",
+            "type": "integer"
+          },
+          "height": {
+            "default": 768,
+            "title": "Height",
+            "type": "integer"
+          }
+        },
+        "title": "get_screenshotArguments",
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": null,
+      "meta": null,
+      "execution": null
+    }
+  ]
+}

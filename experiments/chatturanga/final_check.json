@@ -1,0 +1,5 @@
+[
+  {"tool": "list_documents"},
+  {"tool": "analyze_shape", "arguments": {"name": "FootSoldier", "doc_name": "ChatturangaFootSoldier"}},
+  {"tool": "get_screenshot", "arguments": {"width": 900, "height": 900}}
+]

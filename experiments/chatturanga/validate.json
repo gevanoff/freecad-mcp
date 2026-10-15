@@ -1,0 +1,6 @@
+[
+  {"tool": "execute_script", "script_file": "validate_and_export.py"},
+  {"tool": "get_screenshot", "arguments": {"width": 900, "height": 900}},
+  {"tool": "analyze_shape", "arguments": {"name": "FootSoldier", "doc_name": "ChatturangaFootSoldier"}},
+  {"tool": "get_document_graph", "arguments": {"doc_name": "ChatturangaFootSoldier"}}
+]

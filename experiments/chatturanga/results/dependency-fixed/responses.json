@@ -1,0 +1,67 @@
+[
+  {
+    "tool": "list_documents",
+    "arguments": {},
+    "isError": true,
+    "result": [
+      "Error executing tool list_documents: Cannot reach FreeCAD MCP at 127.0.0.1:9876: [WinError 10061] No connection could be made because the target machine actively refused it"
+    ]
+  },
+  {
+    "tool": "create_document",
+    "arguments": {
+      "name": "ChatturangaCurrent"
+    },
+    "isError": true,
+    "result": [
+      "Error executing tool create_document: Cannot reach FreeCAD MCP at 127.0.0.1:9876: [WinError 10061] No connection could be made because the target machine actively refused it"
+    ]
+  },
+  {
+    "tool": "create_primitive",
+    "arguments": {
+      "kind": "cylinder",
+      "label": "Foot Soldier Base",
+      "radius": 11,
+      "height": 4,
+      "doc_name": "ChatturangaCurrent"
+    },
+    "isError": true,
+    "result": [
+      "Error executing tool create_primitive: Cannot reach FreeCAD MCP at 127.0.0.1:9876: [WinError 10061] No connection could be made because the target machine actively refused it"
+    ]
+  },
+  {
+    "tool": "analyze_shape",
+    "arguments": {
+      "name": "MCPPrimitive",
+      "doc_name": "ChatturangaCurrent"
+    },
+    "isError": true,
+    "result": [
+      "Error executing tool analyze_shape: Cannot reach FreeCAD MCP at 127.0.0.1:9876: [WinError 10061] No connection could be made because the target machine actively refused it"
+    ]
+  },
+  {
+    "tool": "get_screenshot",
+    "arguments": {
+      "width": 900,
+      "height": 900
+    },
+    "isError": true,
+    "result": [
+      "Error executing tool get_screenshot: Cannot reach FreeCAD MCP at 127.0.0.1:9876: [WinError 10061] No connection could be made because the target machine actively refused it"
+    ]
+  },
+  {
+    "tool": "analyze_shape",
+    "arguments": {
+      "name": "MCPPrimitive",
+      "doc_name": "ChatturangaCurrent"
+    },
+    "isError": true,
+    "result": [
+      "Error executing tool analyze_shape: Cannot reach FreeCAD MCP at 127.0.0.1:9876: [WinError 10061] No connection could be made because the target machine actively refused it"
+    ]
+  }
+]

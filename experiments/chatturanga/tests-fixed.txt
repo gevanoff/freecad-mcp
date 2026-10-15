@@ -1,0 +1,47 @@
+test_freecad_exec_loader_without_file_global (test_addon_initialization.AddonInitializationTests.test_freecad_exec_loader_without_file_global) ... ok
+test_exact_maximum_response_frame_with_terminal_newline (test_framing.FrameContractTests.test_exact_maximum_response_frame_with_terminal_newline) ... ok
+test_malformed_or_non_object_response_is_rejected (test_framing.FrameContractTests.test_malformed_or_non_object_response_is_rejected) ... ok
+test_oversized_server_result_gets_bounded_protocol_error (test_framing.FrameContractTests.test_oversized_server_result_gets_bounded_protocol_error) ... ok
+test_request_and_response_limits_match_the_server (test_framing.FrameContractTests.test_request_and_response_limits_match_the_server) ... ok
+test_request_boundary_includes_newline (test_framing.FrameContractTests.test_request_boundary_includes_newline) ... ok
+test_response_with_delimiter_beyond_limit_is_rejected (test_framing.FrameContractTests.test_response_with_delimiter_beyond_limit_is_rejected) ... ok
+test_server_accepts_compact_response_at_exact_byte_boundary (test_framing.FrameContractTests.test_server_accepts_compact_response_at_exact_byte_boundary) ... ok
+test_truncated_response_is_rejected (test_framing.FrameContractTests.test_truncated_response_is_rejected) ... ok
+test_valid_response_larger_than_request_limit (test_framing.FrameContractTests.test_valid_response_larger_than_request_limit) ... ok
+test_default_tools_over_stdio (test_mcp_startup.MCPStartupTests.test_default_tools_over_stdio) ... [10/15/26 09:20:26] INFO     Processing request of type           server.py:733
+                             ListToolsRequest                                  
+ok
+test_script_opt_in_over_stdio (test_mcp_startup.MCPStartupTests.test_script_opt_in_over_stdio) ... [10/15/26 09:20:26] INFO     Processing request of type           server.py:733
+                             ListToolsRequest                                  
+ok
+test_add_object_failure_clears_booked_transaction (test_primitive_transactions.PrimitiveTransactionTests.test_add_object_failure_clears_booked_transaction) ... ok
+test_booked_gui_transaction_before_first_edit_is_preserved (test_primitive_transactions.PrimitiveTransactionTests.test_booked_gui_transaction_before_first_edit_is_preserved) ... ok
+test_bounded_undo_history_same_name_still_reports_committed (test_primitive_transactions.PrimitiveTransactionTests.test_bounded_undo_history_same_name_still_reports_committed) ... ok
+test_commit_failure_attempts_rollback (test_primitive_transactions.PrimitiveTransactionTests.test_commit_failure_attempts_rollback) ... ok
+test_disabled_undo_refuses_mutation (test_primitive_transactions.PrimitiveTransactionTests.test_disabled_undo_refuses_mutation) ... ok
+test_input_validation_never_opens_transaction (test_primitive_transactions.PrimitiveTransactionTests.test_input_validation_never_opens_transaction) ... ok
+test_invalid_object_with_valid_brep_rolls_back (test_primitive_transactions.PrimitiveTransactionTests.test_invalid_object_with_valid_brep_rolls_back) ... ok
+test_invalid_shape_rolls_back (test_primitive_transactions.PrimitiveTransactionTests.test_invalid_shape_rolls_back) ... ok
+test_nonthrowing_recompute_error_rolls_back (test_primitive_transactions.PrimitiveTransactionTests.test_nonthrowing_recompute_error_rolls_back) ... ok
+test_pending_gui_transaction_is_not_touched (test_primitive_transactions.PrimitiveTransactionTests.test_pending_gui_transaction_is_not_touched) ... ok
+test_post_commit_observer_transaction_is_not_aborted (test_primitive_transactions.PrimitiveTransactionTests.test_post_commit_observer_transaction_is_not_aborted) ... ok
+test_postcommit_observer_error_returns_committed_result (test_primitive_transactions.PrimitiveTransactionTests.test_postcommit_observer_error_returns_committed_result) ... ok
+test_recompute_failure_rolls_back (test_primitive_transactions.PrimitiveTransactionTests.test_recompute_failure_rolls_back) ... ok
+test_success_commits_once (test_primitive_transactions.PrimitiveTransactionTests.test_success_commits_once) ... ok
+test_summary_bounds_ignore_display_tessellation (test_primitive_transactions.PrimitiveTransactionTests.test_summary_bounds_ignore_display_tessellation) ... ok
+test_transaction_on_other_document_blocks_mutation (test_primitive_transactions.PrimitiveTransactionTests.test_transaction_on_other_document_blocks_mutation) ... ok
+test_unavailable_transaction_api_fails_closed (test_primitive_transactions.PrimitiveTransactionTests.test_unavailable_transaction_api_fails_closed) ... ok
+test_authenticates_and_checks_response_id (test_security.BridgeTests.test_authenticates_and_checks_response_id) ... ok
+test_rejects_non_loopback_targets (test_security.BridgeTests.test_rejects_non_loopback_targets) ... ok
+test_missing_token_fails_closed (test_security.ConfigTests.test_missing_token_fails_closed) ... ok
+test_token_rejects_group_or_world_readable_permissions (test_security.ConfigTests.test_token_rejects_group_or_world_readable_permissions) ... skipped 'POSIX mode bits are not portable on Windows'
+test_token_requires_minimum_strength (test_security.ConfigTests.test_token_requires_minimum_strength) ... ok
+test_bad_request_shape_is_rejected (test_security.RPCSecurityTests.test_bad_request_shape_is_rejected) ... ok
+test_frame_limit_applies_before_newline (test_security.RPCSecurityTests.test_frame_limit_applies_before_newline) ... ok
+test_handler_executes_only_after_authenticated_dispatch (test_security.RPCSecurityTests.test_handler_executes_only_after_authenticated_dispatch) ... ok
+test_unauthorized_request_never_reaches_handler (test_security.RPCSecurityTests.test_unauthorized_request_never_reaches_handler) ... ok
+
+----------------------------------------------------------------------
+Ran 38 tests in 2.014s
+
+OK (skipped=1)

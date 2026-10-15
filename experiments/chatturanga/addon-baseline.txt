@@ -1,0 +1,20 @@
+test_freecad_exec_loader_without_file_global (test_addon_initialization.AddonInitializationTests.test_freecad_exec_loader_without_file_global) ... ERROR
+
+======================================================================
+ERROR: test_freecad_exec_loader_without_file_global (test_addon_initialization.AddonInitializationTests.test_freecad_exec_loader_without_file_global)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\paper\Code\freecad-mcp-chatgpt\tests\test_addon_initialization.py", line 18, in test_freecad_exec_loader_without_file_global
+    exec(compile(source.read_text(encoding="utf-8"), str(source), "exec"),
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         {"__name__": "__FreeCADInitGui__"})
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\paper\Code\freecad-mcp-chatgpt\freecad_addon\InitGui.py", line 8, in <module>
+    _addon_dir = os.path.dirname(os.path.realpath(__file__))
+                                                  ^^^^^^^^
+NameError: name '__file__' is not defined. Did you mean: '__name__'?
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=1)

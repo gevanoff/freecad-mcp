@@ -1,0 +1,67 @@
+{
+  "freecad_version": [
+    "1",
+    "1",
+    "4",
+    "20260928 (Git shallow)",
+    "Unknown",
+    "2026/09/28 13:46:34",
+    "(HEAD detached at 4fd3bf320)",
+    "4fd3bf320d9566a27e60069fc8387448aaa3a094"
+  ],
+  "installed_document_handler_sha256": "bb8aded50fbbf5bf074a3aed50c33b40f24eabf5db6774eae36a6f43cf3ec791",
+  "native": {
+    "valid": true,
+    "closed": true,
+    "solids": 1,
+    "bounds_mm": [
+      22.0,
+      22.0,
+      31.5
+    ],
+    "z_min_mm": 0.0,
+    "volume_mm3": 4616.1179116811645
+  },
+  "reopened_native": {
+    "valid": true,
+    "closed": true,
+    "solids": 1,
+    "bounds_mm": [
+      22.0,
+      22.0,
+      31.5
+    ],
+    "z_min_mm": 0.0,
+    "volume_mm3": 4616.117911681165
+  },
+  "step_reimport": {
+    "valid": true,
+    "closed": true,
+    "solids": 1,
+    "bounds_mm": [
+      22.0,
+      22.0,
+      31.5
+    ],
+    "z_min_mm": 0.0,
+    "volume_mm3": 4616.1179116809435
+  },
+  "stl_reimport": {
+    "solid": true,
+    "facets": 4238,
+    "bounds_mm": [
+      22.0,
+      22.0,
+      31.5
+    ],
+    "volume_mm3": 4605.14697265625
+  },
+  "units": "mm (STL consumer must select mm)",
+  "axes": "Z up, base on Z=0",
+  "physical_validation": "Not printed or physically tested",
+  "artifact_sha256": {
+    "ChatturangaFootSoldier.FCStd": "95afebe2cd8750f880439921db2005075a33674aa075a27d9cd3e88e037493ad",
+    "ChatturangaFootSoldier.step": "75e611f2261ccdbcfb033ea7cce963c0647da69660d4911f038dea3a66aea3e2",
+    "ChatturangaFootSoldier.stl": "233c30f16c1c62059c85291d607233952df94f3d73ec529261fef81017ce68e7"
+  }
+}

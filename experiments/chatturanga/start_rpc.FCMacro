@@ -1,3 +1,14 @@
+import traceback
+from pathlib import Path
 import FreeCADGui as Gui
-Gui.activateWorkbench("FreeCADMCPWorkbench")
-Gui.runCommand("FreeCADMCPStart")
+
+log = Path(__file__).with_name("startup-gui.txt")
+try:
+    Gui.activateWorkbench("FreeCADMCPWorkbench")
+    Gui.runCommand("FreeCADMCPStart")
+    import mcp_commands
+    assert mcp_commands._get_server().is_running
+    log.write_text("RPC running on loopback\n", encoding="utf-8")
+except Exception:
+    log.write_text(traceback.format_exc(), encoding="utf-8")
+    raise

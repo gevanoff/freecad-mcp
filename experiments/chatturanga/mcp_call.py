@@ -33,7 +33,11 @@ async def main():
                 response = await session.call_tool(call["tool"], arguments)
                 data = response.structuredContent
                 if data is None:
-                    data = [getattr(item, "text", "") for item in response.content]
+                    content = [getattr(item, "text", "") for item in response.content]
+                    try:
+                        data = json.loads(content[0]) if len(content) == 1 else content
+                    except (ValueError, TypeError):
+                        data = content
                 if isinstance(data, dict) and "base64_png" in data:
                     file = f"{index:02}-screenshot.png"
                     (output / file).write_bytes(base64.b64decode(data.pop("base64_png")))
