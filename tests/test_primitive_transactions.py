@@ -143,6 +143,28 @@ class PrimitiveTransactionTests(unittest.TestCase):
         self.assertEqual(doc.events, ["open", "add", "recompute", "commit"])
         self.assertEqual(doc.UndoNames, ["MCP: create primitive"])
 
+    def test_bounded_undo_history_same_name_still_reports_committed(self):
+        doc = FakeDocument()
+        doc.UndoNames = ["MCP: create primitive"]
+        doc.post_commit_error = RuntimeError("observer failed")
+        result = load_handler(doc).create_primitive("box")
+        self.assertIn("commit_observer_warning", result)
+        self.assertEqual(len(doc.objects), 1)
+        self.assertNotIn("abort", doc.events)
+
+    def test_post_commit_observer_transaction_is_not_aborted(self):
+        doc = FakeDocument()
+        def observer_commit():
+            doc.events.append("commit")
+            doc.booking = ("Observer", 77)
+            doc.HasPendingTransaction = True
+            raise RuntimeError("observer failure")
+        doc.commitTransaction = observer_commit
+        result = load_handler(doc).create_primitive("box")
+        self.assertIn("commit_observer_warning", result)
+        self.assertEqual(doc.booking, ("Observer", 77))
+        self.assertNotIn("abort", doc.events)
+
     def test_invalid_shape_rolls_back(self):
         for shape in (FakeShape(valid=False), FakeShape(null=True)):
             with self.subTest(null=shape.null, valid=shape.valid):
