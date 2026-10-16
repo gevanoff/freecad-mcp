@@ -51,6 +51,7 @@ class RPCSecurityTests(unittest.TestCase):
     def setUp(self):
         self.server = RPCServer()
         self.server._token = "t" * 48
+        self.server._running = True  # In-process dispatcher stands in for Start.
 
     def test_unauthorized_request_never_reaches_handler(self):
         called = []
