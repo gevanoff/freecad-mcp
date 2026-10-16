@@ -9,10 +9,10 @@ test_server_accepts_compact_response_at_exact_byte_boundary (test_framing.FrameC
 test_truncated_response_is_rejected (test_framing.FrameContractTests.test_truncated_response_is_rejected) ... ok
 test_valid_response_larger_than_request_limit (test_framing.FrameContractTests.test_valid_response_larger_than_request_limit) ... ok
 test_default_tools_over_stdio (test_mcp_startup.MCPStartupTests.test_default_tools_over_stdio) ... [10/15/26 17:19:01] INFO     Processing request of type           server.py:733
-                             ListToolsRequest                                  
+                             ListToolsRequest
 ok
 test_script_opt_in_over_stdio (test_mcp_startup.MCPStartupTests.test_script_opt_in_over_stdio) ... [10/15/26 17:19:02] INFO     Processing request of type           server.py:733
-                             ListToolsRequest                                  
+                             ListToolsRequest
 ok
 test_add_object_failure_clears_booked_transaction (test_primitive_transactions.PrimitiveTransactionTests.test_add_object_failure_clears_booked_transaction) ... ok
 test_booked_gui_transaction_before_first_edit_is_preserved (test_primitive_transactions.PrimitiveTransactionTests.test_booked_gui_transaction_before_first_edit_is_preserved) ... ok
