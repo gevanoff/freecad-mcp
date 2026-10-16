@@ -1,0 +1,143 @@
+{
+  "exit_code": 0,
+  "command": [
+    "C:\\Program Files\\Bambu Studio\\bambu-studio.exe",
+    "--load-settings",
+    "C:\\Users\\paper\\Code\\freecad-mcp-chatgpt\\experiments\\followup\\slicer\\machine.json;C:\\Users\\paper\\Code\\freecad-mcp-chatgpt\\experiments\\followup\\slicer\\process.json",
+    "--load-filaments",
+    "C:\\Users\\paper\\Code\\freecad-mcp-chatgpt\\experiments\\followup\\slicer\\filament.json",
+    "--curr-bed-type",
+    "Textured PEI Plate",
+    "--arrange",
+    "1",
+    "--slice",
+    "0",
+    "--export-3mf",
+    "Chatturanga-X1E-PLA.3mf",
+    "C:\\Users\\paper\\Code\\freecad-mcp-chatgpt\\experiments\\chatturanga\\artifacts\\ChatturangaFootSoldier.stl"
+  ],
+  "input_sha256": "233c30f16c1c62059c85291d607233952df94f3d73ec529261fef81017ce68e7",
+  "slicer_result": {
+    "error_string": "Success.",
+    "export_time": 297,
+    "layer_height": 0.20000000298023224,
+    "plate_index": 0,
+    "prepare_time": 36,
+    "return_code": 0,
+    "sliced_plates": [
+      {
+        "feature_type_times": {
+          "Bottom surface": 15.324812889099121,
+          "Bridge": 18.568790435791016,
+          "Custom": 35.26875305175781,
+          "Gap infill": 1.9806047677993774,
+          "Inner wall": 244.16415405273438,
+          "Internal solid infill": 93.36725616455078,
+          "Outer wall": 271.4485778808594,
+          "Overhang wall": 7.247946739196777,
+          "Sparse infill": 306.8251037597656,
+          "Top surface": 13.984777450561523,
+          "Travel": 71.8896713256836,
+          "Undefined": 56.55235290527344
+        },
+        "filament_change_times": 0,
+        "filaments": [
+          {
+            "filament_id": "GFL99",
+            "id": 1,
+            "main_used_g": 2.6333839893341064,
+            "total_used_g": 2.6333839893341064
+          }
+        ],
+        "generate_support_material_time": 9,
+        "id": 1,
+        "infill_time": 32,
+        "layer_filament_change": 0,
+        "main_predication": 1044.8341064453125,
+        "make_perimeters_time": 16,
+        "obj_cached_cnt": 0,
+        "objects": [
+          {
+            "bbox": {
+              "depth": 30.765228271484375,
+              "height": 31.5,
+              "width": 30.765226364135742,
+              "x": 112.61737823486328,
+              "y": 112.61738586425781,
+              "z": 0.0
+            },
+            "id": 5,
+            "name": "ChatturangaFootSoldier.stl",
+            "triangle_count": 4238
+          }
+        ],
+        "sliced_time": 189,
+        "sliced_time_with_cache": 114,
+        "total_predication": 1064.7349853515625,
+        "triangle_count": 4238,
+        "warning_message": ""
+      }
+    ],
+    "sparse_infill_density": 15.0,
+    "wall_loops": 2
+  },
+  "effective_settings": {
+    "printer_model": "Bambu Lab X1E",
+    "printer_variant": "0.4",
+    "nozzle_diameter": [
+      "0.4"
+    ],
+    "filament_type": [
+      "PLA"
+    ],
+    "filament_settings_id": [
+      "Generic PLA"
+    ],
+    "layer_height": "0.2",
+    "enable_support": "0",
+    "curr_bed_type": "Textured PEI Plate",
+    "wall_loops": "2",
+    "sparse_infill_density": "15%"
+  },
+  "archive_files": [
+    "[Content_Types].xml",
+    "Metadata/plate_1.png",
+    "Metadata/plate_1_small.png",
+    "Metadata/plate_no_light_1.png",
+    "Metadata/top_1.png",
+    "Metadata/pick_1.png",
+    "Metadata/plate_1.json",
+    "3D/3dmodel.model",
+    "3D/_rels/3dmodel.model.rels",
+    "3D/Objects/object_1.model",
+    "Metadata/project_settings.config",
+    "Metadata/plate_1.gcode.md5",
+    "Metadata/plate_1.gcode",
+    "Metadata/_rels/model_settings.config.rels",
+    "Metadata/model_settings.config",
+    "Metadata/cut_information.xml",
+    "Metadata/slice_info.config",
+    "Metadata/filament_sequence.json",
+    "_rels/.rels"
+  ],
+  "models": [
+    {
+      "file": "3D/Objects/object_1.model",
+      "unit": "millimeter",
+      "bounds_mm": [
+        22.0,
+        22.0,
+        31.5
+      ],
+      "vertices": 2121,
+      "triangles": 4238,
+      "closed_oriented_mesh": true
+    }
+  ],
+  "gcode": {
+    "Metadata/plate_1.gcode": [
+      "; model printing time: 17m 24s; total estimated time: 17m 44s",
+      "; total layer number: 157"
+    ]
+  }
+}

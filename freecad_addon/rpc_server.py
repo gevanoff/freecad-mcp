@@ -159,14 +159,25 @@ class RPCServer:
         handler = self._handlers.get(method)
         if handler is None:
             return self._error(req_id, -32601, "Method not found")
-        job = {"handler": handler, "params": params, "event": threading.Event(), "result": None}
+        job = {"handler": handler, "params": params, "event": threading.Event(),
+               "lock": threading.Lock(), "state": "queued", "result": None}
         try:
             self._queue.put_nowait(job)
         except queue.Full:
             return self._error(req_id, -32002, "FreeCAD is busy; retry later")
         if not job["event"].wait(MAIN_THREAD_TIMEOUT):
-            job["cancelled"] = True
-            return self._error(req_id, -32003, "Timed out waiting for FreeCAD")
+            # Claim cancellation atomically with GUI dispatch. Once running, a
+            # handler cannot safely be interrupted from this socket thread.
+            with job["lock"]:
+                if job["state"] == "queued":
+                    job["state"] = "cancelled"
+                    return self._error(req_id, -32003,
+                                       "Timed out before execution; operation cancelled")
+                if job["state"] == "running":
+                    return self._error(req_id, -32005,
+                                       "FreeCAD operation is still running; outcome is unknown. "
+                                       "Inspect the document before retrying.")
+                # Completion may race with wait() expiring: return its result.
         if "error" in job:
             return self._error(req_id, -32000, job["error"][:8192])
         response = {"jsonrpc": "2.0", "result": job["result"], "id": req_id}
@@ -179,14 +190,19 @@ class RPCServer:
             job = self._queue.get_nowait()
         except queue.Empty:
             return
-        try:
-            if job.get("cancelled"):
+        with job["lock"]:
+            if job["state"] == "cancelled":
+                job["event"].set()
                 return
+            job["state"] = "running"
+        try:
             job["result"] = job["handler"](**job["params"])
         except Exception as exc:
             job["error"] = f"{type(exc).__name__}: {exc}\n{traceback.format_exc(limit=8)}"
         finally:
-            job["event"].set()
+            with job["lock"]:
+                job["state"] = "finished"
+                job["event"].set()
 
     @staticmethod
     def _error(req_id: Any, code: int, message: str) -> dict[str, Any]:

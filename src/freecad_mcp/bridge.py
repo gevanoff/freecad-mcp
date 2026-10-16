@@ -15,7 +15,8 @@ DEFAULT_PORT = 9876
 MAX_FRAME_BYTES = 1024 * 1024  # Maximum request frame, including newline
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024  # Maximum response frame, including newline
 CONNECT_TIMEOUT = 3.0
-CALL_TIMEOUT = 35.0
+# Allow the add-on's 35-second dispatch deadline to return an explicit outcome.
+CALL_TIMEOUT = 40.0
 
 
 class BridgeError(RuntimeError):
@@ -46,12 +47,18 @@ class FreeCADBridge:
         if len(raw) > MAX_FRAME_BYTES:
             raise BridgeError("RPC request exceeds the 1 MiB frame limit")
 
+        transmission_started = False
         try:
             with socket.create_connection((self.host, self.port), timeout=CONNECT_TIMEOUT) as sock:
                 sock.settimeout(CALL_TIMEOUT)
+                transmission_started = True
                 sock.sendall(raw)
                 response = self._read_frame(sock)
-        except OSError as exc:
+        except (OSError, BridgeError) as exc:
+            if transmission_started:
+                raise BridgeError("FreeCAD connection failed after transmission began; "
+                                  "operation outcome is unknown. Inspect the document "
+                                  f"before retrying: {exc}") from exc
             raise BridgeError(f"Cannot reach FreeCAD MCP at {self.host}:{self.port}: {exc}") from exc
 
         if response.get("id") != payload["id"]:

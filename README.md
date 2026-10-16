@@ -27,6 +27,8 @@ The authenticated bridge and initial modeling/inspection tools have been tested
 with FreeCAD 1.1.4 on Windows. A Chatturanga foot-soldier pilot was created through
 MCP and saved/reopened as FCStd, STEP and STL. See the
 [reproducible experiment and limits](experiments/chatturanga/README.md).
+Follow-up [rollback, timeout, viewport, and X1E slicer tests](experiments/followup/README.md)
+include live FreeCAD evidence and a sliced PLA project.
 The standard tools currently create basic primitives and inspect documents;
 positioning, Boolean composition, saving and export require the optional script
 tool. This is not yet a full constrained modeling toolset.
@@ -75,6 +77,14 @@ server environment, then restart both. This is equivalent to granting arbitrary
 code execution in FreeCAD as your user. Do not enable it for untrusted clients.
 
 ## Configuration
+
+RPC calls queued for more than 35 seconds are cancelled before execution
+(`-32003`). If execution has already started, `-32005` reports an unknown
+outcome: the operation may still commit. Inspect the document before retrying;
+a transport failure after transmission also cannot establish cancellation.
+The client allows 40 seconds for the server's explicit deadline response.
+Screenshots require an active 3D view; spreadsheet and other non-3D tabs are
+rejected with an instruction to activate a 3D view.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |

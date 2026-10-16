@@ -1,0 +1,8 @@
+startup.txt
+*.log
+slicer-help.txt
+slicer-stderr.txt
+result.json
+datadir/
+imported.3mf
+baseline/01-screenshot.png

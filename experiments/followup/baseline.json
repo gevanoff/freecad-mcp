@@ -1,0 +1,4 @@
+[
+  {"tool": "execute_script", "script_file": "setup.py"},
+  {"tool": "get_screenshot", "arguments": {"width": 640, "height": 480}}
+]

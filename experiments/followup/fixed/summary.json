@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "real geometry exception rollback",
+    "spreadsheet rejection",
+    "3D PNG capture",
+    "in-flight timeout truthfulness",
+    "queued timeout cancellation"
+  ],
+  "status": "passed"
+}

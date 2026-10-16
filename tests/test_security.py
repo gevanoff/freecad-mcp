@@ -8,7 +8,7 @@ import threading
 import time
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -115,6 +115,28 @@ class BridgeTests(unittest.TestCase):
         os.environ["FREECAD_MCP_HOST"] = "0.0.0.0"
         with self.assertRaises(ValueError):
             FreeCADBridge()
+
+    def test_dispatch_deadline_can_return_before_transport_timeout(self):
+        from freecad_mcp.bridge import CALL_TIMEOUT
+        from freecad_addon.rpc_server import MAIN_THREAD_TIMEOUT
+        self.assertGreaterEqual(CALL_TIMEOUT, MAIN_THREAD_TIMEOUT + 3)
+
+    def test_connect_failure_does_not_claim_possible_execution(self):
+        with patch("freecad_mcp.bridge.socket.create_connection", side_effect=OSError("refused")):
+            with self.assertRaisesRegex(BridgeError, "Cannot reach FreeCAD MCP"):
+                FreeCADBridge().call("create_primitive")
+
+    def test_read_timeout_and_disconnect_report_unknown_outcome(self):
+        for error in (TimeoutError("read timeout"), None):
+            with self.subTest(error=error):
+                sock = MagicMock()
+                sock.__enter__.return_value = sock
+                sock.recv.side_effect = error
+                sock.recv.return_value = b""
+                with patch("freecad_mcp.bridge.socket.create_connection", return_value=sock):
+                    with self.assertRaisesRegex(BridgeError, "outcome is unknown"):
+                        FreeCADBridge().call("create_primitive")
+                sock.sendall.assert_called_once()
 
     def test_authenticates_and_checks_response_id(self):
         bridge = FreeCADBridge()

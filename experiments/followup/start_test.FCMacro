@@ -1,0 +1,24 @@
+"""Isolated test listener. Never installs or replaces the user's add-on."""
+import sys
+import traceback
+from pathlib import Path
+import FreeCAD as App
+import FreeCADGui as Gui
+
+folder = Path(__file__).resolve().parent
+sys.path.insert(0, str(folder.parents[1]))
+try:
+    from freecad_addon.rpc_server import RPCServer
+    from freecad_addon.handlers import document, viewport, execution
+    test_server = RPCServer(port=9877)
+    test_server.register_all({
+        "list_documents": document.list_documents,
+        "create_primitive": document.create_primitive,
+        "get_screenshot": viewport.get_screenshot,
+        "execute_script": execution.execute_script,
+    })
+    test_server.start()
+    (folder / "startup.txt").write_text("Test listener ready on 9877\n")
+except Exception:
+    (folder / "startup.txt").write_text(traceback.format_exc())
+    raise

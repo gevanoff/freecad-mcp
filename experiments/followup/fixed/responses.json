@@ -1,0 +1,174 @@
+[
+  {
+    "tool": "execute_script",
+    "arguments": {
+      "script": "import json\nimport math\nfrom freecad_addon.handlers import document\ndoc = App.newDocument(\"FollowupScratch\")\ndoc.UndoMode = 1\nseed = document.create_primitive(\"box\", label=\"Preserve me\", doc_name=doc.Name)\nbefore = [obj.Name for obj in doc.Objects]\nbefore_undo = doc.UndoCount\noriginal = document._shape_summary\ndef fail_after_recompute(shape):\n    assert shape.isValid() and shape.Volume > 0\n    raise RuntimeError(\"Injected failure after real geometry recompute\")\ndocument._shape_summary = fail_after_recompute\ntry:\n    try:\n        document.create_primitive(\"sphere\", doc_name=doc.Name)\n        raise AssertionError(\"Expected injected failure\")\n    except RuntimeError as exc:\n        assert \"Injected failure\" in str(exc), str(exc)\nfinally:\n    document._shape_summary = original\nassert [obj.Name for obj in doc.Objects] == before\nassert doc.UndoCount == before_undo\nassert not doc.HasPendingTransaction\nassert App.getActiveTransaction() is None\nassert math.isclose(doc.getObject(seed[\"name\"]).Shape.Volume, 1000, rel_tol=1e-10)\nprint(json.dumps({\"rollback\": \"passed\", \"objects\": before, \"undo_count\": before_undo}))\nsheet = doc.addObject(\"Spreadsheet::Sheet\", \"TestSheet\")\nsheet.set(\"A1\", \"Non-3D viewport regression\")\ndoc.recompute()\nGui.activeDocument().setEdit(sheet.Name)\nGui.updateGui()\nprint(json.dumps({\"actual_view\": str(type(Gui.activeView())),\n                  \"doc_view\": str(type(Gui.activeDocument().activeView())),\n                  \"actual_has_saveImage\": hasattr(Gui.activeView(), \"saveImage\")}))\n"
+    },
+    "isError": false,
+    "result": {
+      "success": true,
+      "stdout": "{\"rollback\": \"passed\", \"objects\": [\"MCPPrimitive\"], \"undo_count\": 1}\n{\"actual_view\": \"<class 'SheetViewPy'>\", \"doc_view\": \"<class 'SheetViewPy'>\", \"actual_has_saveImage\": false}\n",
+      "stderr": "",
+      "error": null
+    }
+  },
+  {
+    "tool": "get_screenshot",
+    "arguments": {},
+    "isError": true,
+    "result": [
+      "Error executing tool get_screenshot: FreeCAD RPC error -32000: RuntimeError: Activate a 3D view before requesting a screenshot\nTraceback (most recent call last):\n  File \"C:\\Users\\paper\\Code\\freecad-mcp-chatgpt\\freecad_addon\\rpc_server.py\", line 199, in _drain_one\n    job[\"result\"] = job[\"handler\"](**job[\"params\"])\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\paper\\Code\\freecad-mcp-chatgpt\\freecad_addon\\handlers\\viewport.py\", line 17, in get_screenshot\n    raise RuntimeError(\"Activate a 3D view before requesting a screenshot\")\nRuntimeError: Activate a 3D view before requesting a screenshot\n"
+    ]
+  },
+  {
+    "tool": "execute_script",
+    "arguments": {
+      "script": "doc = App.newDocument(\"Screenshot3D\")\ndoc.UndoMode = 1"
+    },
+    "isError": false,
+    "result": {
+      "success": true,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    }
+  },
+  {
+    "tool": "create_primitive",
+    "arguments": {
+      "kind": "box",
+      "doc_name": "Screenshot3D"
+    },
+    "isError": false,
+    "result": {
+      "document": "Screenshot3D",
+      "name": "MCPPrimitive",
+      "label": "MCPPrimitive",
+      "type_id": "Part::Box",
+      "shape": {
+        "shape_type": "Solid",
+        "is_valid": true,
+        "is_null": false,
+        "topology": {
+          "vertices": 8,
+          "edges": 12,
+          "wires": 6,
+          "faces": 6,
+          "solids": 1
+        },
+        "bounds": {
+          "min": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "max": [
+            10.0,
+            10.0,
+            10.0
+          ]
+        },
+        "area": 599.9999999999999,
+        "volume": 999.9999999999998
+      }
+    }
+  },
+  {
+    "tool": "execute_script",
+    "arguments": {
+      "script": "Gui.activeDocument().activeView().viewAxonometric()\nGui.activeDocument().activeView().fitAll()\nGui.updateGui()"
+    },
+    "isError": false,
+    "result": {
+      "success": true,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    }
+  },
+  {
+    "tool": "get_screenshot",
+    "arguments": {
+      "width": 640,
+      "height": 480
+    },
+    "isError": false,
+    "result": {
+      "format": "png",
+      "width": 640,
+      "height": 480,
+      "image_sha256": "a03f3e11c9593742e4a53b6d22628d95903c88d14dfaf6943dbb98bca2f53e68"
+    }
+  },
+  {
+    "tool": "execute_script",
+    "arguments": {
+      "script": "import time\nfrom freecad_addon import rpc_server\nfrom freecad_addon.handlers import document\nrpc_server.MAIN_THREAD_TIMEOUT = 0.2\ndocument._original_summary = document._shape_summary\ndef slow_summary(shape):\n    time.sleep(0.8)\n    return document._original_summary(shape)\ndocument._shape_summary = slow_summary\n"
+    },
+    "isError": false,
+    "result": {
+      "success": true,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    }
+  },
+  {
+    "tool": "create_primitive",
+    "arguments": {
+      "kind": "sphere",
+      "doc_name": "Screenshot3D"
+    },
+    "isError": true,
+    "result": [
+      "Error executing tool create_primitive: FreeCAD RPC error -32005: FreeCAD operation is still running; outcome is unknown. Inspect the document before retrying."
+    ]
+  },
+  {
+    "tool": "execute_script",
+    "arguments": {
+      "script": "from freecad_addon.handlers import document\ndocument._shape_summary = document._original_summary\ndel document._original_summary\ndoc = App.getDocument(\"Screenshot3D\")\nassert len(doc.Objects) == 2\nassert all(obj.Shape.isValid() for obj in doc.Objects)\nassert not doc.HasPendingTransaction\nprint(\"Running timeout: exactly one primitive eventually committed\")\n"
+    },
+    "isError": false,
+    "result": {
+      "success": true,
+      "stdout": "Running timeout: exactly one primitive eventually committed\n",
+      "stderr": "",
+      "error": null
+    }
+  },
+  {
+    "tool": "execute_script",
+    "arguments": {
+      "script": "import time\ntime.sleep(1.2)"
+    },
+    "isError": true,
+    "result": [
+      "Error executing tool execute_script: FreeCAD RPC error -32005: FreeCAD operation is still running; outcome is unknown. Inspect the document before retrying."
+    ]
+  },
+  {
+    "tool": "create_primitive",
+    "arguments": {
+      "kind": "cylinder",
+      "doc_name": "Screenshot3D"
+    },
+    "isError": true,
+    "result": [
+      "Error executing tool create_primitive: FreeCAD RPC error -32003: Timed out before execution; operation cancelled"
+    ]
+  },
+  {
+    "tool": "execute_script",
+    "arguments": {
+      "script": "from freecad_addon import rpc_server\nrpc_server.MAIN_THREAD_TIMEOUT = 35.0\ndoc = App.getDocument(\"Screenshot3D\")\nassert len(doc.Objects) == 2\nassert doc.UndoCount == 2\nassert not doc.HasPendingTransaction\nprint(\"Queued timeout: no late mutation after GUI resumed\")\n"
+    },
+    "isError": false,
+    "result": {
+      "success": true,
+      "stdout": "Queued timeout: no late mutation after GUI resumed\n",
+      "stderr": "",
+      "error": null
+    }
+  }
+]

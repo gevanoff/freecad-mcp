@@ -1,0 +1,26 @@
+[
+  {
+    "tool": "execute_script",
+    "arguments": {
+      "script": "EXPERIMENT_DIR = 'C:\\\\Users\\\\paper\\\\Code\\\\freecad-mcp-chatgpt\\\\experiments\\\\followup'\nimport json\nimport math\nfrom freecad_addon.handlers import document\ndoc = App.newDocument(\"FollowupScratch\")\ndoc.UndoMode = 1\nseed = document.create_primitive(\"box\", label=\"Preserve me\", doc_name=doc.Name)\nbefore = [obj.Name for obj in doc.Objects]\nbefore_undo = doc.UndoCount\noriginal = document._shape_summary\ndef fail_after_recompute(shape):\n    assert shape.isValid() and shape.Volume > 0\n    raise RuntimeError(\"Injected failure after real geometry recompute\")\ndocument._shape_summary = fail_after_recompute\ntry:\n    try:\n        document.create_primitive(\"sphere\", doc_name=doc.Name)\n        raise AssertionError(\"Expected injected failure\")\n    except RuntimeError as exc:\n        assert \"Injected failure\" in str(exc), str(exc)\nfinally:\n    document._shape_summary = original\nassert [obj.Name for obj in doc.Objects] == before\nassert doc.UndoCount == before_undo\nassert not doc.HasPendingTransaction\nassert App.getActiveTransaction() is None\nassert math.isclose(doc.getObject(seed[\"name\"]).Shape.Volume, 1000, rel_tol=1e-10)\nprint(json.dumps({\"rollback\": \"passed\", \"objects\": before, \"undo_count\": before_undo}))\nsheet = doc.addObject(\"Spreadsheet::Sheet\", \"TestSheet\")\nsheet.set(\"A1\", \"Non-3D viewport regression\")\ndoc.recompute()\nGui.activeDocument().setEdit(sheet.Name)\nGui.updateGui()\nprint(json.dumps({\"actual_view\": str(type(Gui.activeView())),\n                  \"doc_view\": str(type(Gui.activeDocument().activeView())),\n                  \"actual_has_saveImage\": hasattr(Gui.activeView(), \"saveImage\")}))\n"
+    },
+    "isError": false,
+    "result": {
+      "success": true,
+      "stdout": "{\"rollback\": \"passed\", \"objects\": [\"MCPPrimitive\"], \"undo_count\": 1}\n{\"actual_view\": \"<class 'SheetViewPy'>\", \"doc_view\": \"<class 'SheetViewPy'>\", \"actual_has_saveImage\": false}\n",
+      "stderr": "",
+      "error": null
+    }
+  },
+  {
+    "tool": "get_screenshot",
+    "arguments": {
+      "width": 640,
+      "height": 480
+    },
+    "isError": true,
+    "result": [
+      "Error executing tool get_screenshot: FreeCAD RPC error -32000: AttributeError: saveImage\nTraceback (most recent call last):\n  File \"C:\\Users\\paper\\Code\\freecad-mcp-chatgpt\\freecad_addon\\rpc_server.py\", line 185, in _drain_one\n    job[\"result\"] = job[\"handler\"](**job[\"params\"])\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\paper\\Code\\freecad-mcp-chatgpt\\freecad_addon\\handlers\\viewport.py\", line 21, in get_screenshot\n    doc.ActiveView.saveImage(path, width, height, \"Current\")\n    ^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: saveImage\n"
+    ]
+  }
+]
