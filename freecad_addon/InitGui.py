@@ -5,7 +5,15 @@ from __future__ import annotations
 import os
 import sys
 
-_addon_dir = os.path.dirname(os.path.realpath(__file__))
+try:
+    _source_file = __file__
+except NameError:
+    # FreeCAD's InitGui loader executes compiled source without __file__.
+    # The code object's filename still identifies this addon, independently
+    # of the user's current directory and installation location.
+    import inspect
+    _source_file = inspect.getfile(inspect.currentframe())
+_addon_dir = os.path.dirname(os.path.realpath(_source_file))
 if _addon_dir not in sys.path:
     sys.path.insert(0, _addon_dir)
 
