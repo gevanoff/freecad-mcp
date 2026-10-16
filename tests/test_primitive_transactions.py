@@ -31,6 +31,9 @@ class FakeShape:
     def isNull(self):
         return self.null
 
+    def optimalBoundingBox(self, useTriangulation=True, useShapeTolerance=False):
+        return self.BoundBox
+
 
 class FakeDocument:
     Name = "Test"
@@ -100,6 +103,19 @@ def load_handler(document, active_transaction=None, transaction_api_available=Tr
 
 
 class PrimitiveTransactionTests(unittest.TestCase):
+    def test_summary_bounds_ignore_display_tessellation(self):
+        shape = FakeShape()
+        coarse = types.SimpleNamespace(XMin=-10.9844, YMin=-10.9961, ZMin=0,
+                                       XMax=11, YMax=10.9961, ZMax=4)
+        exact = types.SimpleNamespace(XMin=-11, YMin=-11, ZMin=0,
+                                      XMax=11, YMax=11, ZMax=4)
+        shape.BoundBox = coarse
+        shape.optimalBoundingBox = lambda useTriangulation=True, useShapeTolerance=False: (
+            coarse if useTriangulation else exact
+        )
+        summary = load_handler(FakeDocument(shape=shape))._shape_summary(shape)
+        self.assertEqual(summary["bounds"], {"min": [-11, -11, 0], "max": [11, 11, 4]})
+
     def test_success_commits_once(self):
         doc = FakeDocument()
         result = load_handler(doc).create_primitive("box")
