@@ -92,6 +92,7 @@ class FrameContractTests(unittest.TestCase):
     def test_oversized_server_result_gets_bounded_protocol_error(self):
         server = RPCServer()
         server._token = "T" * 48
+        server._running = True  # In-process dispatcher stands in for Start.
         server.register_all({"large": lambda: "A" * SERVER_MAX_RESPONSE_BYTES})
         outcome = {}
         request = json.dumps({
@@ -114,6 +115,7 @@ class FrameContractTests(unittest.TestCase):
     def test_server_accepts_compact_response_at_exact_byte_boundary(self):
         server = RPCServer()
         server._token = "T" * 48
+        server._running = True  # In-process dispatcher stands in for Start.
         template = {"jsonrpc": "2.0", "result": "", "id": 9}
         content_length = SERVER_MAX_RESPONSE_BYTES - len(
             json.dumps(template, separators=(",", ":")).encode()) - 1
