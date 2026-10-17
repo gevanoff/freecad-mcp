@@ -23,9 +23,16 @@ a design reference.
 
 ## Development status
 
-Initial implementation in progress. The stdio server and authenticated bridge
-are being built first; the add-on's FreeCAD handlers follow. Live FreeCAD
-integration has not yet been tested.
+The authenticated bridge and initial modeling/inspection tools have been tested
+with FreeCAD 1.1.4 on Windows. A Chatturanga foot-soldier pilot was created through
+MCP and saved/reopened as FCStd, STEP and STL. See the
+[reproducible experiment and limits](https://github.com/gevanoff/freecad-mcp/blob/codex_test-rollback-viewport-slicer/experiments/chatturanga/README.md).
+Follow-up [rollback, timeout, viewport, and X1E slicer tests](https://github.com/gevanoff/freecad-mcp/blob/codex_test-rollback-viewport-slicer/experiments/followup/README.md)
+include live FreeCAD evidence and a sliced PLA project. The generated
+experiment outputs remain on the experimental branch rather than on `main`.
+The standard tools currently create basic primitives and inspect documents;
+positioning, Boolean composition, saving and export require the optional script
+tool. This is not yet a full constrained modeling toolset.
 
 ## Install the MCP process
 
@@ -40,6 +47,13 @@ On Windows, activate `.venv\Scripts\activate` instead. Install or symlink the
 `freecad_addon` directory into FreeCAD's `Mod` directory, then restart FreeCAD.
 The add-on starts with its RPC listener stopped; activate the **FreeCAD MCP**
 workbench and choose **Start RPC Server**.
+
+For FreeCAD 1.1 on Windows, the user addon directory is normally
+`%APPDATA%\FreeCAD\v1-1\Mod\freecad_addon` (containing `InitGui.py` directly).
+Confirm the running instance's location with `FreeCAD.getUserAppDataDir()` if
+using a portable or packaged launcher; Windows app virtualization can redirect
+this directory. The Python server currently supports MCP SDK 1.x and declares
+`mcp[cli]>=1.2.0,<2`; install from this checkout to obtain that constraint.
 
 Configure any MCP client that supports stdio servers to run `freecad-mcp` from
 the project environment. For example, the generic command shape is:
@@ -64,6 +78,16 @@ server environment, then restart both. This is equivalent to granting arbitrary
 code execution in FreeCAD as your user. Do not enable it for untrusted clients.
 
 ## Configuration
+
+RPC calls queued for more than 35 seconds are cancelled before execution
+(`-32003`). Stop cancels any pending operations and fences requests from
+an earlier server session (`-32006`). If execution has already started,
+`-32005` reports an unknown
+outcome: the operation may still commit. Inspect the document before retrying;
+a transport failure after transmission also cannot establish cancellation.
+The client allows 40 seconds for the server's explicit deadline response.
+Screenshots require an active 3D view; spreadsheet and other non-3D tabs are
+rejected with an instruction to activate a 3D view.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |

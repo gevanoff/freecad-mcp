@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Secure local MCP bridge for FreeCAD"
 requires-python = ">=3.10"
 license = "LGPL-2.1-or-later"
-dependencies = ["mcp[cli]>=1.2.0"]
+dependencies = ["mcp[cli]>=1.2.0,<2"]
 
 [project.scripts]
 freecad-mcp = "freecad_mcp.server:main"

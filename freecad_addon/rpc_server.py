@@ -39,6 +39,10 @@ class RPCServer:
         self._socket: socket.socket | None = None
         self._accept_thread: threading.Thread | None = None
         self._running = False
+        # Synchronize queue admission, GUI dispatch, shutdown, and restart.
+        self._state_lock = threading.RLock()
+        self._generation = 0
+        self._active_jobs: list[dict[str, Any]] = []
         self._token: str | None = None
         self._queue: queue.Queue = queue.Queue(maxsize=MAX_QUEUED_CALLS)
         self._clients = threading.BoundedSemaphore(MAX_CLIENTS)
@@ -52,14 +56,16 @@ class RPCServer:
         self._handlers.update(handlers)
 
     def start(self) -> None:
-        if self._running:
-            return
+        with self._state_lock:
+            if self._running:
+                return
         try:
             from PySide2 import QtCore
         except ImportError:
             from PySide6 import QtCore
         token = read_token()
         listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        timer = None
         try:
             listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             listener.bind((HOST, self.port))
@@ -69,46 +75,84 @@ class RPCServer:
             timer.timeout.connect(self._drain_one)
             timer.start(POLL_INTERVAL_MS)
         except Exception:
+            if timer is not None:
+                timer.stop()
             listener.close()
             raise
-        self._token = token
-        self._socket = listener
-        self._timer = timer
-        self._running = True
-        self._accept_thread = threading.Thread(target=self._accept_loop, daemon=True)
-        self._accept_thread.start()
+        with self._state_lock:
+            self._generation += 1
+            generation = self._generation
+            self._token = token
+            self._socket = listener
+            self._timer = timer
+            self._running = True
+            thread = threading.Thread(
+                target=self._accept_loop, args=(listener, generation), daemon=True)
+            self._accept_thread = thread
+            thread.start()
         logger.info("FreeCAD MCP RPC listening on %s:%d", HOST, self.port)
 
     def stop(self) -> None:
-        self._running = False
-        if self._timer is not None:
-            self._timer.stop()
-            self._timer = None
-        if self._socket is not None:
-            self._socket.close()
-            self._socket = None
-        if self._accept_thread is not None:
-            self._accept_thread.join(timeout=2)
-            self._accept_thread = None
-        self._token = None
+        with self._state_lock:
+            self._running = False
+            # Retire the session before allowing a later Start, even when
+            # the same token and RPCServer instance are reused.
+            self._generation += 1
+            while True:
+                try:
+                    job = self._queue.get_nowait()
+                except queue.Empty:
+                    break
+                with job["lock"]:
+                    if job["state"] == "queued":
+                        job["state"] = "cancelled"
+                        job["cancel_reason"] = "shutdown"
+                    job["event"].set()
+            for job in self._active_jobs:
+                with job["lock"]:
+                    # Running FreeCAD GUI operations cannot be rolled back
+                    # safely by a socket thread: tell callers the outcome
+                    # is unknown, even if the handler finishes later.
+                    job["shutdown_while_running"] = True
+                    job["event"].set()
+            timer, self._timer = self._timer, None
+            listener, self._socket = self._socket, None
+            accept_thread, self._accept_thread = self._accept_thread, None
+            self._token = None
+        if timer is not None:
+            timer.stop()
+        if listener is not None:
+            listener.close()
+        if accept_thread is not None:
+            accept_thread.join(timeout=2)
 
-    def _accept_loop(self) -> None:
-        while self._running and self._socket is not None:
+    def _accept_loop(self, listener: socket.socket, generation: int) -> None:
+        while True:
+            with self._state_lock:
+                if not self._running or generation != self._generation:
+                    return
             try:
-                client, address = self._socket.accept()
+                client, address = listener.accept()
             except socket.timeout:
                 continue
             except OSError:
-                break
-            if not self._clients.acquire(blocking=False):
+                return
+            with self._state_lock:
+                if not self._running or generation != self._generation:
+                    client.close()
+                    return
+                allowed = self._clients.acquire(blocking=False)
+            if not allowed:
                 client.close()
                 continue
-            threading.Thread(target=self._client_loop, args=(client, address), daemon=True).start()
+            threading.Thread(
+                target=self._client_loop,
+                args=(client, address, generation), daemon=True).start()
 
-    def _client_loop(self, client: socket.socket, address: tuple) -> None:
+    def _client_loop(self, client: socket.socket, address: tuple, generation: int) -> None:
         try:
             raw = self._read_frame(client)
-            response = self._handle(raw)
+            response = self._handle(raw, expected_generation=generation)
             encoded = json.dumps(response, separators=(",", ":")).encode("utf-8") + b"\n"
             if len(encoded) <= MAX_RESPONSE_BYTES:
                 client.settimeout(2.0)
@@ -141,7 +185,7 @@ class RPCServer:
                 return bytes(data)
             data.extend(part)
 
-    def _handle(self, raw: bytes) -> dict[str, Any]:
+    def _handle(self, raw: bytes, expected_generation: int | None = None) -> dict[str, Any]:
         try:
             request = json.loads(raw)
         except (UnicodeDecodeError, json.JSONDecodeError):
@@ -150,43 +194,87 @@ class RPCServer:
             return self._error(None, -32600, "Invalid request")
         req_id = request.get("id")
         supplied = request.get("token")
-        if not isinstance(supplied, str) or not hmac.compare_digest(supplied, self._token or ""):
-            return self._error(req_id, -32001, "Unauthorized")
         method = request.get("method")
         params = request.get("params", {})
-        if not isinstance(method, str) or not isinstance(params, dict) or req_id is None:
-            return self._error(req_id, -32600, "Invalid request")
-        handler = self._handlers.get(method)
-        if handler is None:
-            return self._error(req_id, -32601, "Method not found")
-        job = {"handler": handler, "params": params, "event": threading.Event(), "result": None}
-        try:
-            self._queue.put_nowait(job)
-        except queue.Full:
-            return self._error(req_id, -32002, "FreeCAD is busy; retry later")
+        with self._state_lock:
+            if not self._running or (
+                    expected_generation is not None and
+                    expected_generation != self._generation):
+                return self._error(req_id, -32006, "RPC server session stopped; request not executed")
+            if not isinstance(supplied, str) or not hmac.compare_digest(supplied, self._token or ""):
+                return self._error(req_id, -32001, "Unauthorized")
+            if not isinstance(method, str) or not isinstance(params, dict) or req_id is None:
+                return self._error(req_id, -32600, "Invalid request")
+            handler = self._handlers.get(method)
+            if handler is None:
+                return self._error(req_id, -32601, "Method not found")
+            job = {
+                "handler": handler, "params": params, "event": threading.Event(),
+                "lock": threading.Lock(), "state": "queued", "result": None,
+                "generation": self._generation, "cancel_reason": None,
+                "shutdown_while_running": False,
+            }
+            try:
+                self._queue.put_nowait(job)
+            except queue.Full:
+                return self._error(req_id, -32002, "FreeCAD is busy; retry later")
+
         if not job["event"].wait(MAIN_THREAD_TIMEOUT):
-            job["cancelled"] = True
-            return self._error(req_id, -32003, "Timed out waiting for FreeCAD")
-        if "error" in job:
-            return self._error(req_id, -32000, job["error"][:8192])
-        response = {"jsonrpc": "2.0", "result": job["result"], "id": req_id}
+            # Synchronize deadline cancellation with GUI dispatch. Once
+            # running, no caller may safely assume a timed-out CAD action
+            # was rolled back or did not execute.
+            with job["lock"]:
+                if job["state"] == "queued":
+                    job["state"] = "cancelled"
+                    job["cancel_reason"] = "deadline"
+        with job["lock"]:
+            if job["state"] == "cancelled":
+                if job["cancel_reason"] == "shutdown":
+                    return self._error(req_id, -32006,
+                                       "RPC server stopped before execution; operation cancelled")
+                return self._error(req_id, -32003,
+                                   "Timed out before execution; operation cancelled")
+            if job["shutdown_while_running"] or job["state"] == "running":
+                return self._error(req_id, -32005,
+                                   "FreeCAD operation is still running or was interrupted by shutdown; "
+                                   "outcome is unknown. Inspect the document before retrying.")
+            if "error" in job:
+                return self._error(req_id, -32000, job["error"][:8192])
+            result = job["result"]
+        response = {"jsonrpc": "2.0", "result": result, "id": req_id}
         if len(json.dumps(response, separators=(",", ":")).encode("utf-8")) + 1 > MAX_RESPONSE_BYTES:
             return self._error(req_id, -32004, "RPC response exceeds the 4 MiB limit")
         return response
 
     def _drain_one(self) -> None:
-        try:
-            job = self._queue.get_nowait()
-        except queue.Empty:
-            return
-        try:
-            if job.get("cancelled"):
+        with self._state_lock:
+            if not self._running:
                 return
+            try:
+                job = self._queue.get_nowait()
+            except queue.Empty:
+                return
+            with job["lock"]:
+                if job["state"] == "cancelled":
+                    job["event"].set()
+                    return
+                if job["generation"] != self._generation:
+                    job["state"] = "cancelled"
+                    job["cancel_reason"] = "shutdown"
+                    job["event"].set()
+                    return
+                job["state"] = "running"
+                self._active_jobs.append(job)
+        try:
             job["result"] = job["handler"](**job["params"])
         except Exception as exc:
-            job["error"] = f"{type(exc).__name__}: {exc}\n{traceback.format_exc(limit=8)}"
+            job["error"] = f"{type(exc).__name__}: {exc}\\n{traceback.format_exc(limit=8)}"
         finally:
-            job["event"].set()
+            with self._state_lock:
+                with job["lock"]:
+                    job["state"] = "finished"
+                    job["event"].set()
+                self._active_jobs.remove(job)
 
     @staticmethod
     def _error(req_id: Any, code: int, message: str) -> dict[str, Any]:
