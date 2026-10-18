@@ -98,6 +98,11 @@ def load(doc, other=None):
         spec = importlib.util.spec_from_file_location("sketcher_under_test", PATH)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
+    original = mod.create_sketch
+    def invoke(*args, **kwargs):
+        with patch.dict(sys.modules, {"FreeCAD": freecad, "Part": part, "Sketcher": sketcher}):
+            return original(*args, **kwargs)
+    mod.create_sketch = invoke
     return mod
 
 
