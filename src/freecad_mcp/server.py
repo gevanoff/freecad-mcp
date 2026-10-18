@@ -52,6 +52,16 @@ def get_sketch_diagnostics(name: str, doc_name: str = "") -> dict:
 
 
 @mcp.tool()
+def create_sketch(elements: list[dict], label: str = "", doc_name: str = "") -> dict:
+    """Create an XY sketch containing up to 64 lines/circles with optional dimensional constraints.
+
+    Circle: {type:"circle",x:0,y:0,radius:5,constrain_radius:true}
+    Line: {type:"line",x1:0,y1:0,x2:10,y2:0,orientation:"horizontal"}
+    """
+    return _call("create_sketch", {"elements": elements, "label": label, "doc_name": doc_name})
+
+
+@mcp.tool()
 def tracked_recompute(doc_name: str = "") -> dict:
     """Recompute a document and report object validity changes."""
     return _call("tracked_recompute", {"doc_name": doc_name})
