@@ -104,6 +104,11 @@ def create_sketch(elements: list[dict], label: str = "", doc_name: str = "") -> 
             raise ValueError("Geometry type must be circle or line")
 
     doc = _resolve_doc(doc_name)
+    # The application transaction accessor describes the active document.
+    # Do not mutate an inactive document until per-document booking ownership
+    # can be verified reliably on supported FreeCAD versions.
+    if doc is not FreeCAD.ActiveDocument:
+        raise RuntimeError("Sketch creation requires the target document to be active")
     try:
         booked = FreeCAD.getActiveTransaction()
     except (AttributeError, TypeError) as exc:
