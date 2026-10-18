@@ -20,7 +20,7 @@ def _get_server() -> RPCServer:
             analyze_shape, create_document, create_primitive, get_document_graph,
             inspect_object, list_documents, tracked_recompute,
         )
-        from handlers.sketcher import get_sketch_diagnostics
+        from handlers.sketcher import create_sketch, get_sketch_diagnostics
         from handlers.viewport import get_screenshot
         handlers = {
             "list_documents": list_documents,
@@ -30,6 +30,7 @@ def _get_server() -> RPCServer:
             "inspect_object": inspect_object,
             "analyze_shape": analyze_shape,
             "get_sketch_diagnostics": get_sketch_diagnostics,
+            "create_sketch": create_sketch,
             "tracked_recompute": tracked_recompute,
             "get_screenshot": get_screenshot,
         }
