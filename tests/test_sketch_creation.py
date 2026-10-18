@@ -77,9 +77,9 @@ class FakeDoc:
         return self.sketch
 
 
-def load(doc, other=None):
+def load(doc, other=None, inactive=False):
     freecad = types.SimpleNamespace(
-        ActiveDocument=doc,
+        ActiveDocument=other if inactive else doc,
         getActiveTransaction=lambda: doc.booking,
         listDocuments=lambda: {"Doc": doc, **({"Other": other} if other else {})},
         Vector=lambda x, y, z: (x, y, z),
@@ -139,6 +139,16 @@ class SketchCreationTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "recompute failed"):
             load(doc).create_sketch([{"type": "circle", "x": 0, "y": 0, "radius": 2}])
         self.assertEqual(doc.events[-1], "abort")
+        self.assertIsNone(doc.sketch)
+
+    def test_inactive_target_rejected_before_transaction(self):
+        doc = FakeDoc()
+        active = FakeDoc()
+        with self.assertRaisesRegex(RuntimeError, "target document to be active"):
+            load(doc, active, inactive=True).create_sketch([
+                {"type": "circle", "x": 0, "y": 0, "radius": 2},
+            ])
+        self.assertEqual(doc.events, [])
         self.assertIsNone(doc.sketch)
 
     def test_busy_other_document_blocks_mutation(self):
