@@ -22,7 +22,8 @@ def config_dir() -> Path:
 
 
 def token_path() -> Path:
-    return Path(os.environ.get("FREECAD_MCP_TOKEN_FILE", config_dir() / "token")).expanduser()
+    override = os.environ.get("FREECAD_MCP_TOKEN_FILE")
+    return Path(override).expanduser() if override else config_dir() / "token"
 
 
 def read_token() -> str:
