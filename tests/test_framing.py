@@ -111,6 +111,7 @@ class FrameContractTests(unittest.TestCase):
         thread.join(2)
         self.assertFalse(thread.is_alive())
         self.assertEqual(outcome["response"]["error"]["code"], -32004)
+        self.assertIn("Inspect the document before retrying", outcome["response"]["error"]["message"])
 
     def test_server_accepts_compact_response_at_exact_byte_boundary(self):
         server = RPCServer()

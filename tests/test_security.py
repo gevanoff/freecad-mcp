@@ -139,6 +139,45 @@ class BridgeTests(unittest.TestCase):
                         FreeCADBridge().call("create_primitive")
                 sock.sendall.assert_called_once()
 
+    def test_untrustworthy_responses_report_unknown_outcome(self):
+        responses = [
+            {"jsonrpc": "2.0", "id": 2, "result": "done"},
+            {"jsonrpc": "2.0", "id": True, "result": "done"},
+            {"jsonrpc": "1.0", "id": 1, "result": "done"},
+            {"jsonrpc": "2.0", "id": 1},
+            {"jsonrpc": "2.0", "id": 1, "result": "done", "error": {"code": -1, "message": "oops"}},
+            {"jsonrpc": "2.0", "id": 1, "error": "not an error object"},
+            {"jsonrpc": "2.0", "id": 1, "error": {"code": True, "message": "oops"}},
+            {"jsonrpc": "2.0", "id": 1, "error": {"code": -1}},
+        ]
+        for response in responses:
+            with self.subTest(response=response):
+                sock = MagicMock()
+                sock.__enter__.return_value = sock
+                sock.recv.return_value = json.dumps(response).encode() + b"\n"
+                with patch("freecad_mcp.bridge.socket.create_connection", return_value=sock):
+                    with self.assertRaisesRegex(BridgeError, "outcome is unknown"):
+                        FreeCADBridge().call("create_primitive")
+                sock.sendall.assert_called_once()
+
+    def test_valid_server_error_remains_actionable(self):
+        sock = MagicMock()
+        sock.__enter__.return_value = sock
+        sock.recv.return_value = json.dumps({
+            "jsonrpc": "2.0", "id": 1,
+            "error": {"code": -32003, "message": "Timed out before execution; operation cancelled"},
+        }).encode() + b"\n"
+        with patch("freecad_mcp.bridge.socket.create_connection", return_value=sock):
+            with self.assertRaisesRegex(BridgeError, "before execution; operation cancelled"):
+                FreeCADBridge().call("create_primitive")
+
+    def test_null_result_is_a_valid_response(self):
+        sock = MagicMock()
+        sock.__enter__.return_value = sock
+        sock.recv.return_value = b'{"jsonrpc":"2.0","id":1,"result":null}\n'
+        with patch("freecad_mcp.bridge.socket.create_connection", return_value=sock):
+            self.assertIsNone(FreeCADBridge().call("ping"))
+
     def test_authenticates_and_checks_response_id(self):
         bridge = FreeCADBridge()
         class FakeSocket:
