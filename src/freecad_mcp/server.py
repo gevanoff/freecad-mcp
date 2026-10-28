@@ -55,6 +55,7 @@ def get_sketch_diagnostics(name: str, doc_name: str = "") -> dict:
 def create_sketch(elements: list[dict], label: str = "", doc_name: str = "") -> dict:
     """Create an XY sketch containing up to 64 lines/circles with optional dimensional constraints.
 
+    The target document must be active in FreeCAD.
     Circle: {type:"circle",x:0,y:0,radius:5,constrain_radius:true}
     Line: {type:"line",x1:0,y1:0,x2:10,y2:0,orientation:"horizontal"}
     """
@@ -77,7 +78,7 @@ def create_primitive(
     radius: float = 5,
     doc_name: str = "",
 ) -> dict:
-    """Create a box, cylinder, or sphere in an open document using bounded dimensions."""
+    """Create a box, cylinder, or sphere in the active FreeCAD document using bounded dimensions."""
     if len(label) > 128:
         raise ValueError("Label must be 128 characters or shorter")
     for value in (length, width, height, radius):

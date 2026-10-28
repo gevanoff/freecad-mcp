@@ -112,6 +112,11 @@ def create_primitive(
             raise ValueError(f"{key} must be between 0.001 and 10000 mm")
 
     doc = _resolve_doc(doc_name)
+    # The application transaction accessor describes the active document.
+    # Match sketch creation: do not mutate a document whose transaction
+    # ownership cannot be checked reliably.
+    if doc is not FreeCAD.ActiveDocument:
+        raise RuntimeError("Primitive creation requires the target document to be active")
     type_id = {"box": "Part::Box", "cylinder": "Part::Cylinder", "sphere": "Part::Sphere"}[kind]
     # A failed recompute or invalid shape must not leave a partially constructed
     # feature behind. FreeCAD transactions also preserve undo history on success.
