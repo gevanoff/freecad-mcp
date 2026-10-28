@@ -86,8 +86,10 @@ an earlier server session (`-32006`). If execution has already started,
 outcome: the operation may still commit. Inspect the document before retrying;
 a transport failure after transmission also cannot establish cancellation.
 The client allows 40 seconds for the server's explicit deadline response.
-Screenshots require an active 3D view; spreadsheet and other non-3D tabs are
-rejected with an instruction to activate a 3D view.
+Primitive and sketch creation require the target document to be active in
+FreeCAD, even when `doc_name` is supplied. Screenshots require an active 3D view;
+spreadsheet and other non-3D tabs are rejected with an instruction to activate
+a 3D view.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |

@@ -90,11 +90,15 @@ class FakeDocument:
             self.HasPendingTransaction = False
 
 
-def load_handler(document, active_transaction=None, transaction_api_available=True):
-    fake_freecad = types.SimpleNamespace(ActiveDocument=document, getDocument=lambda name: document,
-                                         listDocuments=lambda: {"Test": document, **getattr(document, "other_documents", {})})
+def load_handler(document, active_transaction=None, transaction_api_available=True, active_document=None):
+    active_document = document if active_document is None else active_document
+    documents = {"Test": document, **getattr(document, "other_documents", {})}
+    if active_document is not document:
+        documents["Active"] = active_document
+    fake_freecad = types.SimpleNamespace(ActiveDocument=active_document, getDocument=lambda name: document,
+                                         listDocuments=lambda: documents)
     if transaction_api_available:
-        fake_freecad.getActiveTransaction = lambda: active_transaction if active_transaction is not None else document.booking
+        fake_freecad.getActiveTransaction = lambda: active_transaction if active_transaction is not None else active_document.booking
     with patch.dict(sys.modules, {"FreeCAD": fake_freecad}):
         spec = importlib.util.spec_from_file_location("freecad_document_under_test", HANDLER_PATH)
         module = importlib.util.module_from_spec(spec)
@@ -103,6 +107,16 @@ def load_handler(document, active_transaction=None, transaction_api_available=Tr
 
 
 class PrimitiveTransactionTests(unittest.TestCase):
+    def test_inactive_target_is_rejected_before_opening_transaction(self):
+        target = FakeDocument(recompute_error=RuntimeError("recompute failed"))
+        active = FakeDocument()
+        with self.assertRaisesRegex(RuntimeError, "target document to be active"):
+            load_handler(target, active_document=active).create_primitive("box", doc_name="Target")
+        self.assertEqual(target.events, [])
+        self.assertEqual(target.objects, [])
+        self.assertIsNone(target.booking)
+        self.assertEqual(active.events, [])
+
     def test_summary_bounds_ignore_display_tessellation(self):
         shape = FakeShape()
         coarse = types.SimpleNamespace(XMin=-10.9844, YMin=-10.9961, ZMin=0,
@@ -121,6 +135,12 @@ class PrimitiveTransactionTests(unittest.TestCase):
         result = load_handler(doc).create_primitive("box")
         self.assertEqual(result["type_id"], "Part::Box")
         self.assertEqual(len(doc.objects), 1)
+        self.assertEqual(doc.events, ["open", "add", "recompute", "commit"])
+
+    def test_named_active_target_still_succeeds(self):
+        doc = FakeDocument()
+        result = load_handler(doc).create_primitive("box", doc_name="Test")
+        self.assertEqual(result["document"], "Test")
         self.assertEqual(doc.events, ["open", "add", "recompute", "commit"])
 
     def test_recompute_failure_rolls_back(self):
