@@ -12,6 +12,9 @@ def token_path() -> Path:
     override = os.environ.get("FREECAD_MCP_TOKEN_FILE")
     if override:
         return Path(override).expanduser()
+    config_override = os.environ.get("FREECAD_MCP_CONFIG_DIR")
+    if config_override:
+        return Path(config_override).expanduser() / "token"
     if sys.platform == "win32":
         root = os.environ.get("LOCALAPPDATA")
         return Path(root or Path.home() / "AppData" / "Local") / "FreeCADMCP" / "token"

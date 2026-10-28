@@ -96,7 +96,11 @@ a 3D view.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `FREECAD_MCP_TOKEN_FILE` | OS user config path | Shared secret file created by `freecad-mcp-init` |
+| `FREECAD_MCP_CONFIG_DIR` | OS user config directory | Directory containing `token`; overridden by `FREECAD_MCP_TOKEN_FILE` |
 | `FREECAD_MCP_HOST` | `127.0.0.1` | Client target; server refuses non-loopback binds |
 | `FREECAD_MCP_PORT` | `9876` | Local RPC port |
 | `FREECAD_MCP_ALLOW_SCRIPT` | unset | Expose the arbitrary Python tool when set to `1` |
+
+Set token path overrides in both the FreeCAD process and the MCP process so
+they read the same credential.
 
