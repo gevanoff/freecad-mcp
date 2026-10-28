@@ -243,7 +243,9 @@ class RPCServer:
             result = job["result"]
         response = {"jsonrpc": "2.0", "result": result, "id": req_id}
         if len(json.dumps(response, separators=(",", ":")).encode("utf-8")) + 1 > MAX_RESPONSE_BYTES:
-            return self._error(req_id, -32004, "RPC response exceeds the 4 MiB limit")
+            return self._error(req_id, -32004,
+                               "RPC response exceeds the 4 MiB limit after execution; "
+                               "the operation may have completed. Inspect the document before retrying.")
         return response
 
     def _drain_one(self) -> None:

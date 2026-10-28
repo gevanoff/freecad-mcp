@@ -11,7 +11,8 @@ on loopback for document inspection and controlled model operations.
   directory with owner-only permissions on POSIX systems.
 - Request frames (1 MiB), response frames (4 MiB including the newline),
   concurrent clients, queued operations, and execution time are bounded.
-  Responses above the limit receive a JSON-RPC error rather than being sent.
+  Responses above the limit receive a JSON-RPC error rather than being sent;
+  the operation may already have completed, so inspect before retrying.
 - Arbitrary Python execution is disabled by default. Enabling it grants the MCP
   client the ability to execute code with the FreeCAD process's full privileges.
 - This is a local-user boundary, not a sandbox against malicious code running
@@ -84,7 +85,8 @@ RPC calls queued for more than 35 seconds are cancelled before execution
 an earlier server session (`-32006`). If execution has already started,
 `-32005` reports an unknown
 outcome: the operation may still commit. Inspect the document before retrying;
-a transport failure after transmission also cannot establish cancellation.
+a transport failure or invalid RPC response after transmission also cannot
+establish cancellation.
 The client allows 40 seconds for the server's explicit deadline response.
 Primitive and sketch creation require the target document to be active in
 FreeCAD, even when `doc_name` is supplied. Screenshots require an active 3D view;

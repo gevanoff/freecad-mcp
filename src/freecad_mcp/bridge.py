@@ -54,6 +54,17 @@ class FreeCADBridge:
                 transmission_started = True
                 sock.sendall(raw)
                 response = self._read_frame(sock)
+                if response.get("jsonrpc") != "2.0":
+                    raise BridgeError("Invalid JSON-RPC version")
+                if type(response.get("id")) is not int or response["id"] != payload["id"]:
+                    raise BridgeError("Mismatched JSON-RPC response id")
+                if ("result" in response) == ("error" in response):
+                    raise BridgeError("Invalid JSON-RPC response shape")
+                if "error" in response:
+                    err = response["error"]
+                    if (not isinstance(err, dict) or type(err.get("code")) is not int
+                            or not isinstance(err.get("message"), str)):
+                        raise BridgeError("Invalid JSON-RPC error object")
         except (OSError, BridgeError) as exc:
             if transmission_started:
                 raise BridgeError("FreeCAD connection failed after transmission began; "
@@ -61,12 +72,10 @@ class FreeCADBridge:
                                   f"before retrying: {exc}") from exc
             raise BridgeError(f"Cannot reach FreeCAD MCP at {self.host}:{self.port}: {exc}") from exc
 
-        if response.get("id") != payload["id"]:
-            raise BridgeError("Mismatched JSON-RPC response id")
         if "error" in response:
             err = response["error"]
-            raise BridgeError(f"FreeCAD RPC error {err.get('code')}: {err.get('message')}")
-        return response.get("result")
+            raise BridgeError(f"FreeCAD RPC error {err['code']}: {err['message']}")
+        return response["result"]
 
     def _next_request_id(self) -> int:
         with self._lock:
