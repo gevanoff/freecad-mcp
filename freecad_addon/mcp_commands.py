@@ -21,6 +21,8 @@ def _get_server() -> RPCServer:
             inspect_object, list_documents, tracked_recompute,
         )
         from handlers.sketcher import create_sketch, get_sketch_diagnostics
+        from handlers.modeling import boolean_solids, create_helical_ridge, transformed_copy
+        from handlers.files import export_objects, open_document, save_document_copy
         from handlers.viewport import get_screenshot
         handlers = {
             "list_documents": list_documents,
@@ -31,6 +33,12 @@ def _get_server() -> RPCServer:
             "analyze_shape": analyze_shape,
             "get_sketch_diagnostics": get_sketch_diagnostics,
             "create_sketch": create_sketch,
+            "boolean_solids": boolean_solids,
+            "create_helical_ridge": create_helical_ridge,
+            "transformed_copy": transformed_copy,
+            "open_document": open_document,
+            "save_document_copy": save_document_copy,
+            "export_objects": export_objects,
             "tracked_recompute": tracked_recompute,
             "get_screenshot": get_screenshot,
         }

@@ -99,6 +99,49 @@ def create_document(name: str) -> dict:
 
 
 @mcp.tool()
+def transformed_copy(name: str, translation: list[float], axis: list[float], angle_degrees: float = 0,
+                     label: str = "", doc_name: str = "") -> dict:
+    """Copy a solid; rotate about the origin then translate by millimetres. Inputs remain unchanged."""
+    return _call("transformed_copy", {"name": name, "translation": translation, "axis": axis,
+                 "angle_degrees": angle_degrees, "label": label, "doc_name": doc_name})
+
+
+@mcp.tool()
+def boolean_solids(operation: Literal["cut", "fuse", "common"], first: str, second: str,
+                   label: str = "", doc_name: str = "") -> dict:
+    """Create a static solid cut, union, or intersection; preserve both source objects."""
+    return _call("boolean_solids", {"operation": operation, "first": first, "second": second,
+                 "label": label, "doc_name": doc_name})
+
+
+@mcp.tool()
+def create_helical_ridge(root_radius: float, outer_radius: float, pitch: float, height: float,
+                         root_width: float, crest_width: float, label: str = "", doc_name: str = "") -> dict:
+    """Sweep a trapezoid along a right-handed +Z helix; all dimensions are millimetres."""
+    return _call("create_helical_ridge", {"root_radius": root_radius, "outer_radius": outer_radius,
+                 "pitch": pitch, "height": height, "root_width": root_width, "crest_width": crest_width,
+                 "label": label, "doc_name": doc_name})
+
+
+@mcp.tool()
+def open_document(path: str) -> dict:
+    """Open an existing local FCStd file that is not already open."""
+    return _call("open_document", {"path": path})
+
+
+@mcp.tool()
+def save_document_copy(path: str, doc_name: str = "") -> dict:
+    """Save an FCStd copy to a new absolute path without replacing an existing file."""
+    return _call("save_document_copy", {"path": path, "doc_name": doc_name})
+
+
+@mcp.tool()
+def export_objects(path: str, names: list[str], doc_name: str = "") -> dict:
+    """Export 1–16 solid objects to a new absolute STL or STEP path."""
+    return _call("export_objects", {"path": path, "names": names, "doc_name": doc_name})
+
+
+@mcp.tool()
 def get_screenshot(width: int = 1024, height: int = 768) -> dict:
     """Capture the active FreeCAD viewport as a PNG data URL payload."""
     if not (64 <= width <= 2048 and 64 <= height <= 2048):

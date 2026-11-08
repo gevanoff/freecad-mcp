@@ -30,7 +30,9 @@ def check_startup(tmp_path, allow_script):
                 await session.initialize()
                 response = await session.list_tools()
                 names = {tool.name for tool in response.tools}
-                assert {"create_document", "create_primitive", "analyze_shape", "get_screenshot"} <= names
+                assert {"create_document", "create_primitive", "analyze_shape", "get_screenshot",
+                        "transformed_copy", "boolean_solids", "create_helical_ridge",
+                        "open_document", "save_document_copy", "export_objects"} <= names
                 assert ("execute_script" in names) == allow_script
 
     asyncio.run(asyncio.wait_for(handshake(), timeout=15))

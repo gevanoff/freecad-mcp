@@ -31,9 +31,33 @@ MCP and saved/reopened as FCStd, STEP and STL. See the
 Follow-up [rollback, timeout, viewport, and X1E slicer tests](https://github.com/gevanoff/freecad-mcp/blob/codex_test-rollback-viewport-slicer/experiments/followup/README.md)
 include live FreeCAD evidence and a sliced PLA project. The generated
 experiment outputs remain on the experimental branch rather than on `main`.
-The standard tools currently create basic primitives and inspect documents;
-positioning, Boolean composition, saving and export require the optional script
-tool. This is not yet a full constrained modeling toolset.
+The standard tools can create basic primitives and sketches, make positioned
+copies, combine solids, generate a bounded helical ridge, inspect documents,
+open FCStd files, save FCStd copies, and export STL or STEP. Modeling results
+are static `Part::Feature` shapes, not associative feature histories. This is
+not yet a full constrained modeling toolset.
+
+## Bounded modeling and files
+
+`transformed_copy` first resolves a source shape to document coordinates,
+rotates it about the document origin, and then translates it in millimetres,
+leaving the source unchanged. `boolean_solids` resolves both operands to document
+coordinates and creates a new solid with `cut`, `fuse`, or `common`.
+`create_helical_ridge` sweeps a trapezoid along a right-handed +Z helix; the
+caller chooses the pitch, radii and widths, and is responsible for actual
+thread standards and fit. It is limited to 30 turns. These operations require
+the active document and refuse to claim an existing GUI transaction. They
+create undoable static shapes; edit the inputs and rerun to revise a result.
+
+`open_document` opens an existing FCStd file by absolute path. As with opening a
+file directly in FreeCAD, only open documents you trust. `save_document_copy`
+writes an FCStd copy without changing the document's filename. `export_objects`
+writes up to 16 solid objects to STL or STEP. Output paths must be absolute,
+their parent directories must already exist, and existing files are never
+replaced. The final file is published with a same-filesystem hard link, so the
+destination filesystem must support hard links. A transport timeout may leave
+the output in place: inspect the path before retrying. These tools use the
+FreeCAD user's filesystem permissions; they are not a filesystem sandbox.
 
 ## Install the MCP process
 

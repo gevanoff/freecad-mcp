@@ -1,0 +1,14 @@
+"""Run the checkout's RPC add-on in a disposable FreeCAD process."""
+import os,sys,traceback
+repo=os.environ['FREECAD_MCP_TEST_REPO']
+status=os.environ['FREECAD_MCP_TEST_STATUS']
+try:
+    sys.path.insert(0,os.path.join(repo,'freecad_addon'))
+    import mcp_commands
+    assert os.path.commonpath([repo,os.path.abspath(mcp_commands.__file__)])==repo
+    mcp_commands._get_server().start()
+    with open(status,'w') as f:f.write('READY')
+except Exception:
+    with open(status,'w') as f:f.write(traceback.format_exc())
+    from PySide import QtCore
+    QtCore.QTimer.singleShot(0,Gui.getMainWindow().close)
