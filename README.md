@@ -39,9 +39,10 @@ not yet a full constrained modeling toolset.
 
 ## Bounded modeling and files
 
-`transformed_copy` rotates a source shape about the origin and then translates
-it in millimetres, leaving the source unchanged. `boolean_solids` creates a new
-solid result from two existing solid objects with `cut`, `fuse`, or `common`.
+`transformed_copy` first resolves a source shape to document coordinates,
+rotates it about the document origin, and then translates it in millimetres,
+leaving the source unchanged. `boolean_solids` resolves both operands to document
+coordinates and creates a new solid with `cut`, `fuse`, or `common`.
 `create_helical_ridge` sweeps a trapezoid along a right-handed +Z helix; the
 caller chooses the pitch, radii and widths, and is responsible for actual
 thread standards and fit. It is limited to 30 turns. These operations require

@@ -38,7 +38,16 @@ def _object_shape(doc, name):
     shape = getattr(obj, "Shape", None)
     if shape is None or shape.isNull() or not shape.isValid():
         raise ValueError(f"Object '{name}' must have a valid, non-null shape")
-    return shape
+    # Shape.Placement already includes this object's placement, but not the
+    # placements of ancestor Parts/Bodies. Results are stored at document root,
+    # so apply only the missing ancestor transform to an independent copy.
+    try:
+        ancestor = obj.getGlobalPlacement().multiply(obj.Placement.inverse())
+    except (AttributeError, TypeError, RuntimeError) as exc:
+        raise ValueError(f"Cannot determine document placement for object '{name}'") from exc
+    result = shape.copy()
+    result.Placement = ancestor.multiply(result.Placement)
+    return result
 
 
 def _store_shape(doc, shape, label, action):
@@ -94,7 +103,7 @@ def transformed_copy(name: str, translation: list, axis: list, angle_degrees: fl
     if math.hypot(*a) < 1e-9:
         raise ValueError("Rotation axis must be non-zero")
     doc = _active_document(doc_name)
-    shape = _object_shape(doc, name).copy()
+    shape = _object_shape(doc, name)
     shape.rotate(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(*a), angle)
     shape.translate(FreeCAD.Vector(*t))
     return _store_shape(doc, shape, label, "transformed copy")

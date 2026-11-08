@@ -17,6 +17,48 @@ try:
     assert 0 < doc.getObject(cut).Shape.Volume < 8000
     ridge=create_helical_ridge(5,6,2.2,8.8,1.8,0.4)['name']
     assert doc.getObject(ridge).Shape.isValid() and len(doc.getObject(ridge).Shape.Solids)==1
+
+    # Shapes in nested Parts use local coordinates even when the containing
+    # Part rotates and translates them. Results live at the document root.
+    outer=doc.addObject('App::Part','OuterPlacement')
+    inner=doc.addObject('App::Part','InnerPlacement')
+    outer.addObject(inner)
+    grouped=doc.addObject('Part::Box','GroupedBox')
+    inner.addObject(grouped)
+    grouped.Length=grouped.Width=grouped.Height=10
+    outer.Placement=App.Placement(App.Vector(100,200,0),App.Rotation(App.Vector(0,0,1),90))
+    inner.Placement.Base=App.Vector(10,0,0)
+    grouped.Placement.Base=App.Vector(2,0,0)
+    world_cutter=doc.addObject('Part::Cylinder','WorldCutter')
+    world_cutter.Radius=2; world_cutter.Height=10
+    world_cutter.Placement.Base=App.Vector(95,217,0)
+    doc.recompute()
+    same=transformed_copy(grouped.Name,[0,0,0],[0,0,1])
+    bounds=same['shape']['bounds']
+    assert all(abs(a-b)<1e-6 for a,b in zip(bounds['min'],[90,212,0])),bounds
+    assert all(abs(a-b)<1e-6 for a,b in zip(bounds['max'],[100,222,10])),bounds
+    moved_again=transformed_copy(grouped.Name,[3,4,0],[0,0,1],90)
+    bounds=moved_again['shape']['bounds']
+    assert all(abs(a-b)<1e-6 for a,b in zip(bounds['min'],[-219,94,0])),bounds
+    assert all(abs(a-b)<1e-6 for a,b in zip(bounds['max'],[-209,104,10])),bounds
+    cut_grouped=boolean_solids('cut',grouped.Name,world_cutter.Name)
+    assert abs(cut_grouped['shape']['volume']-(1000-math.pi*40))<1e-5,cut_grouped
+    overlap=boolean_solids('common',grouped.Name,world_cutter.Name)
+    assert abs(overlap['shape']['volume']-math.pi*40)<1e-5,overlap
+    assert abs(grouped.Shape.Volume-1000)<1e-5 and grouped.Placement.Base.x==2
+
+    # The same normalization applies to features inside a PartDesign Body.
+    body=doc.addObject('PartDesign::Body','PlacedBody')
+    body_box=body.newObject('PartDesign::AdditiveBox','BodyBox')
+    body_box.Length=body_box.Width=body_box.Height=10
+    body.Placement.Base=App.Vector(30,-20,0)
+    body_box.Placement.Base=App.Vector(7,3,0)
+    doc.recompute()
+    body_copy=transformed_copy(body_box.Name,[0,0,0],[0,0,1])
+    bounds=body_copy['shape']['bounds']
+    assert all(abs(a-b)<1e-6 for a,b in zip(bounds['min'],[37,-17,0])),bounds
+    assert all(abs(a-b)<1e-6 for a,b in zip(bounds['max'],[47,-7,10])),bounds
+
     before=len(doc.Objects)
     doc.openTransaction('Existing GUI action')
     doc.getObject(box).Label='Pending GUI edit'
